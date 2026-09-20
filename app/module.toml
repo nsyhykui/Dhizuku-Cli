@@ -43,7 +43,7 @@ minSdk = 26
 targetSdk = 30
 manifest = "src/main/AndroidManifest.xml"
 versionCode = 1
-versionName = "1.0"
+versionName = "1.1"
 isApplication = true
 manifestPlaceholders = []
 buildTypes = [{ name = "debug", debuggable = true, minifyEnabled = false, shrinkResources = false }, { name = "dhizuku-cli-release", debuggable = false, minifyEnabled = false, shrinkResources = false, proguardFiles = ["proguard-android-optimize.txt", "proguard-rules.pro"], signingConfig = "release" }]

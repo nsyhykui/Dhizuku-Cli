@@ -25,7 +25,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,7 +39,6 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.security.SecureRandom;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 public class MainActivity extends Activity implements CheckCallback, LogCallback {
@@ -53,10 +51,6 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
     private static final String KEY_CHARS = "abcdefghijklmnopqrstuvwxyz";
     private static final int KEY_LEN = 32;
 
-    private static final String[] BIND_LABELS = {
-            "仅本机 (127.0.0.1)",
-            "局域网 (0.0.0.0)"
-    };
     private static final String[] BIND_VALUES = {
             "127.0.0.1",
             "0.0.0.0"
@@ -64,7 +58,6 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
 
     private TextView tvStatus;
     private TextView tvLog;
-    private TextView tvLocalIp;
     private EditText etPort;
     private EditText etKey;
     private Spinner spBind;
@@ -79,15 +72,15 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         layout.setPadding(50, 50, 50, 50);
 
         Button btnCheck = new Button(this);
-        btnCheck.setText("检测 Dhizuku");
+        btnCheck.setText(R.string.btn_check);
 
-        // ---- 端口行 ----
+        // 端口行
         LinearLayout portRow = new LinearLayout(this);
         portRow.setOrientation(LinearLayout.HORIZONTAL);
         portRow.setPadding(0, 20, 0, 0);
 
         TextView tvPortLabel = new TextView(this);
-        tvPortLabel.setText("端口：");
+        tvPortLabel.setText(R.string.label_port);
         tvPortLabel.setTextSize(15f);
         tvPortLabel.setPadding(0, 20, 20, 0);
 
@@ -103,19 +96,23 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         portRow.addView(tvPortLabel);
         portRow.addView(etPort);
 
-        // ---- 监听地址行 ----
+        // 监听行
         LinearLayout bindRow = new LinearLayout(this);
         bindRow.setOrientation(LinearLayout.HORIZONTAL);
         bindRow.setPadding(0, 10, 0, 0);
 
         TextView tvBindLabel = new TextView(this);
-        tvBindLabel.setText("监听：");
+        tvBindLabel.setText(R.string.label_bind);
         tvBindLabel.setTextSize(15f);
         tvBindLabel.setPadding(0, 20, 20, 0);
 
         spBind = new Spinner(this);
+        String[] bindLabels = {
+                getString(R.string.bind_localhost),
+                getString(R.string.bind_lan)
+        };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, BIND_LABELS);
+                this, android.R.layout.simple_spinner_item, bindLabels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spBind.setAdapter(adapter);
 
@@ -130,19 +127,19 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         bindRow.addView(tvBindLabel);
         bindRow.addView(spBind);
 
-        // ---- 本机局域网 IP 显示 ----
-        tvLocalIp = new TextView(this);
+        // 本机 IP
+        TextView tvLocalIp = new TextView(this);
         tvLocalIp.setTextSize(13f);
         tvLocalIp.setPadding(0, 10, 0, 10);
-        tvLocalIp.setText("本机局域网 IP: " + getLocalIpAddress());
+        tvLocalIp.setText(getString(R.string.label_local_ip, getLocalIpAddress()));
 
-        // ---- 密钥行 ----
+        // 密钥行
         LinearLayout keyRow = new LinearLayout(this);
         keyRow.setOrientation(LinearLayout.HORIZONTAL);
         keyRow.setPadding(0, 10, 0, 0);
 
         TextView tvKeyLabel = new TextView(this);
-        tvKeyLabel.setText("密钥：");
+        tvKeyLabel.setText(R.string.label_key);
         tvKeyLabel.setTextSize(15f);
         tvKeyLabel.setPadding(0, 20, 20, 0);
 
@@ -159,7 +156,7 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         etKey.setText(savedKey);
 
         Button btnRandom = new Button(this);
-        btnRandom.setText("随机");
+        btnRandom.setText(R.string.btn_random);
         btnRandom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -167,7 +164,7 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
                 etKey.setText(newKey);
                 getSharedPreferences(PREFS, MODE_PRIVATE)
                         .edit().putString(KEY_AUTH, newKey).apply();
-                onLog("密钥已更新");
+                onLog(getString(R.string.log_key_updated));
             }
         });
 
@@ -176,14 +173,14 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         keyRow.addView(btnRandom);
 
         Button btnStart = new Button(this);
-        btnStart.setText("启动 TCP 服务");
+        btnStart.setText(R.string.btn_start);
 
         Button btnStop = new Button(this);
-        btnStop.setText("停止 TCP 服务");
+        btnStop.setText(R.string.btn_stop);
 
         tvStatus = new TextView(this);
         tvStatus.setTextSize(15f);
-        tvStatus.setText("准备就绪");
+        tvStatus.setText(R.string.status_ready);
 
         tvLog = new TextView(this);
         tvLog.setTextSize(12f);
@@ -214,35 +211,32 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 保存密钥
                 String key = etKey.getText().toString().trim();
                 if (key.length() < 8) {
-                    onLog("密钥太短，至少 8 位");
+                    onLog(getString(R.string.log_key_too_short));
                     return;
                 }
                 getSharedPreferences(PREFS, MODE_PRIVATE)
                         .edit().putString(KEY_AUTH, key).apply();
 
-                // 解析端口
                 int port;
                 try {
                     port = Integer.parseInt(etPort.getText().toString().trim());
                 } catch (Exception e) {
-                    onLog("端口格式错误");
+                    onLog(getString(R.string.log_port_format_error));
                     return;
                 }
                 if (port < 1 || port > 65535) {
-                    onLog("端口必须在 1 ~ 65535 之间");
+                    onLog(getString(R.string.log_port_range));
                     return;
                 }
 
-                // 解析监听地址
                 int sel = spBind.getSelectedItemPosition();
                 if (sel < 0 || sel >= BIND_VALUES.length) sel = 0;
                 String bindAddr = BIND_VALUES[sel];
 
                 if (bindAddr.equals("0.0.0.0")) {
-                    onLog("警告：局域网模式下，同网络设备可访问。请确保密钥安全");
+                    onLog(getString(R.string.log_lan_warning));
                 }
 
                 checkPortAndStart(port, bindAddr);
@@ -254,8 +248,8 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
             public void onClick(View v) {
                 Intent it = new Intent(MainActivity.this, DoForegroundService.class);
                 stopService(it);
-                onLog("前台服务已停止");
-                onStatus("服务已停止");
+                onLog(getString(R.string.log_service_stopped));
+                onStatus(getString(R.string.status_stopped));
             }
         });
     }
@@ -269,9 +263,6 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         return sb.toString();
     }
 
-    /**
-     * 遍历网络接口，返回第一个非回环的 IPv4 地址。
-     */
     private String getLocalIpAddress() {
         try {
             List<NetworkInterface> interfaces =
@@ -286,11 +277,11 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
             }
         } catch (Exception ignored) {
         }
-        return "(未获取到)";
+        return "(unknown)";
     }
 
     private void checkPortAndStart(final int port, final String bindAddr) {
-        onStatus("正在检查端口 " + port + " ...");
+        onStatus(getString(R.string.status_checking_port, port));
 
         new Thread(new Runnable() {
             @Override
@@ -301,11 +292,11 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
                     @Override
                     public void run() {
                         if (finalError == null) {
-                            onLog("端口 " + port + " 可用");
+                            onLog(getString(R.string.log_port_available, port));
                             startForegroundServer(port, bindAddr);
                         } else {
-                            onLog("端口检查失败: " + finalError);
-                            onStatus("端口不可用");
+                            onLog(getString(R.string.log_port_check_failed, finalError));
+                            onStatus(getString(R.string.status_port_unavailable));
                         }
                     }
                 });
@@ -322,16 +313,14 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
             String msg = e.getMessage();
             if (msg == null) msg = "";
             if (msg.contains("Permission denied")) {
-                return "权限不足，无法绑定 " + bindAddr + ":" + port;
+                return "Permission denied: " + bindAddr + ":" + port;
             }
             if (msg.contains("Address already in use")) {
-                return "端口 " + port + " 已被占用，请换一个";
+                return "Address already in use: " + port;
             }
-            return "绑定失败: " + msg;
-        } catch (SecurityException e) {
-            return "被系统策略拒绝: " + e.getMessage();
+            return msg;
         } catch (Exception e) {
-            return "未知错误: " + e.toString();
+            return e.toString();
         } finally {
             if (ss != null) {
                 try { ss.close(); } catch (Exception ignored) {}
@@ -355,8 +344,8 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         } else {
             startService(it);
         }
-        onLog("前台服务已启动，监听 " + bindAddr + ":" + port);
-        onStatus("服务运行中");
+        onLog(getString(R.string.log_service_started, bindAddr, port));
+        onStatus(getString(R.string.status_running));
     }
 
     private void requestIgnoreBatteryOptimization() {

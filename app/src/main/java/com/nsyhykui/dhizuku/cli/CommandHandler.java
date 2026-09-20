@@ -23,6 +23,7 @@ import android.app.admin.IDevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.IInterface;
 
@@ -57,19 +58,41 @@ public class CommandHandler {
     public String process(String line) {
         if (line == null || line.trim().isEmpty()) return "Failed";
 
-        String[] parts = line.trim().split("\\s+", 3);
-        if (parts.length < 2) return "Failed";
+        // <包名> <TOTP> <命令> [参数]
+        String[] parts = line.trim().split("\\s+", 4);
+        if (parts.length < 3) return "Failed";
 
-        String code = parts[0];
-        String cmd = parts[1];
-        String arg = parts.length > 2 ? parts[2].trim() : "";
+        String pkg = parts[0];
+        String code = parts[1];
+        String cmd = parts[2];
+        String arg = parts.length > 3 ? parts[3].trim() : "";
 
         if (!verifyTotp(code)) return "Denied";
+
+        // 无参数命令：不允许携带参数
+        if (cmd.equals("ping") || cmd.equals("lock_now")) {
+            if (!arg.isEmpty()) {
+                return "Failed: unexpected argument: " + arg;
+            }
+        }
+
+        // 需要参数的命令：必须携带参数
+        if (cmd.equals("hide") || cmd.equals("unhide") ||
+            cmd.equals("suspend") || cmd.equals("resume") ||
+            cmd.equals("block_uninstall") || cmd.equals("unblock_uninstall")) {
+            if (arg.isEmpty()) {
+                return "Failed: missing package";
+            }
+        }
 
         if (cmd.equals("ping")) return "Success";
         if (cmd.equals("lock_now")) return doLockNow();
         if (cmd.equals("hide")) return doHide(arg, true);
         if (cmd.equals("unhide")) return doHide(arg, false);
+        if (cmd.equals("suspend")) return doSuspend(arg, true);
+        if (cmd.equals("resume")) return doSuspend(arg, false);
+        if (cmd.equals("block_uninstall")) return doBlockUninstall(arg, true);
+        if (cmd.equals("unblock_uninstall")) return doBlockUninstall(arg, false);
 
         return "Unknown";
     }
@@ -89,6 +112,11 @@ public class CommandHandler {
 
     private String doHide(String pkg, boolean hidden) {
         if (pkg.isEmpty()) return "Failed: missing package";
+
+        if (hidden && !isPackageInstalled(pkg)) {
+            return "Failed: package not installed";
+        }
+
         try {
             DevicePolicyManager dpm = getDhizukuDpm();
             if (dpm == null) return "Failed: dpm null";
@@ -102,6 +130,62 @@ public class CommandHandler {
             return "Success";
         } catch (Throwable t) {
             return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
+        }
+    }
+
+    private String doSuspend(String pkg, boolean suspended) {
+        if (pkg.isEmpty()) return "Failed: missing package";
+
+        if (suspended && !isPackageInstalled(pkg)) {
+            return "Failed: package not installed";
+        }
+
+        try {
+            DevicePolicyManager dpm = getDhizukuDpm();
+            if (dpm == null) return "Failed: dpm null";
+
+            ComponentName admin = Dhizuku.getOwnerComponent();
+            String[] packages = new String[]{pkg};
+            String[] failed = dpm.setPackagesSuspended(admin, packages, suspended);
+
+            if (failed != null && failed.length > 0) {
+                return "Failed: cannot suspend " + failed[0];
+            }
+            return "Success";
+        } catch (Throwable t) {
+            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
+        }
+    }
+
+    private String doBlockUninstall(String pkg, boolean blocked) {
+        if (pkg.isEmpty()) return "Failed: missing package";
+
+        if (blocked && !isPackageInstalled(pkg)) {
+            return "Failed: package not installed";
+        }
+
+        try {
+            DevicePolicyManager dpm = getDhizukuDpm();
+            if (dpm == null) return "Failed: dpm null";
+
+            ComponentName admin = Dhizuku.getOwnerComponent();
+            dpm.setUninstallBlocked(admin, pkg, blocked);
+            return "Success";
+        } catch (Throwable t) {
+            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
+        }
+    }
+
+    /* ================= 工具 ================= */
+
+    private boolean isPackageInstalled(String pkg) {
+        try {
+            context.getPackageManager().getPackageInfo(pkg, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        } catch (Throwable t) {
+            return false;
         }
     }
 

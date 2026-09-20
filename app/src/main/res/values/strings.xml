@@ -1,5 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.1" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dhizuku Cli</string>
-    <string name="hello_world">Hello, World!</string>
+
+    <!-- 按钮 -->
+    <string name="btn_check">Check Dhizuku</string>
+    <string name="btn_start">Start TCP Service</string>
+    <string name="btn_stop">Stop TCP Service</string>
+    <string name="btn_random">Random</string>
+
+    <!-- 标签 -->
+    <string name="label_port">Port:</string>
+    <string name="label_bind">Bind:</string>
+    <string name="label_key">Key:</string>
+    <string name="label_local_ip">Local IP: %1$s</string>
+
+    <!-- 监听选项 -->
+    <string name="bind_localhost">Localhost (127.0.0.1)</string>
+    <string name="bind_lan">LAN (0.0.0.0)</string>
+
+    <!-- 状态 -->
+    <string name="status_ready">Ready</string>
+    <string name="status_running">Service running</string>
+    <string name="status_stopped">Service stopped</string>
+    <string name="status_checking_port">Checking port %1$d...</string>
+    <string name="status_port_unavailable">Port unavailable</string>
+
+    <!-- 日志 -->
+    <string name="log_key_updated">Key updated</string>
+    <string name="log_key_too_short">Key too short, at least 8 characters</string>
+    <string name="log_port_format_error">Invalid port format</string>
+    <string name="log_port_range">Port must be 1 to 65535</string>
+    <string name="log_lan_warning">Warning: LAN mode allows other devices on the same network to connect. Keep the key safe.</string>
+    <string name="log_port_available">Port %1$d available</string>
+    <string name="log_port_check_failed">Port check failed: %1$s</string>
+    <string name="log_service_started">Foreground service started, listening on %1$s:%2$d</string>
+    <string name="log_service_stopped">Foreground service stopped</string>
 </resources>
