@@ -31,6 +31,7 @@ public class DoForegroundService extends Service {
 
     private static final String CHANNEL_ID = "do_server_channel";
     private static final int NOTIFY_ID = 1;
+    private static final int NOTIFY_PERM_ID = 2;
     private static final String PREFS = "do_server_prefs";
     private static final String KEY_PORT = "port";
     private static final String KEY_BIND = "bind_addr";
@@ -43,11 +44,25 @@ public class DoForegroundService extends Service {
     public void onCreate() {
         super.onCreate();
         createChannel();
+
+        AuthManager.get(this).setPromptListener(new AuthManager.PromptListener() {
+            @Override
+            public void onPrompt(final int uid) {
+                String pkg = uidToPackage(uid);
+
+                if (AuthOverlay.hasPermission(DoForegroundService.this)) {
+                    AuthOverlay.show(getApplicationContext(), uid, pkg);
+                } else {
+                    AuthOverlay.requestPermission(getApplicationContext());
+                    notifyPermissionNeeded();
+                    AuthManager.get(DoForegroundService.this).decide(uid, false);
+                }
+            }
+        });
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         int port = DEFAULT_PORT;
         String bindAddr = DEFAULT_BIND;
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -56,10 +71,7 @@ public class DoForegroundService extends Service {
             port = intent.getIntExtra("port", DEFAULT_PORT);
             bindAddr = intent.getStringExtra("bind_addr");
             if (bindAddr == null) bindAddr = DEFAULT_BIND;
-
-            sp.edit().putInt(KEY_PORT, port)
-                     .putString(KEY_BIND, bindAddr)
-                     .apply();
+            sp.edit().putInt(KEY_PORT, port).putString(KEY_BIND, bindAddr).apply();
         } else {
             port = sp.getInt(KEY_PORT, DEFAULT_PORT);
             bindAddr = sp.getString(KEY_BIND, DEFAULT_BIND);
@@ -77,6 +89,41 @@ public class DoForegroundService extends Service {
         }
 
         return START_STICKY;
+    }
+
+    private void notifyPermissionNeeded() {
+        try {
+            Notification.Builder b;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                b = new Notification.Builder(this, CHANNEL_ID);
+            } else {
+                b = new Notification.Builder(this);
+            }
+            b.setContentTitle(getString(R.string.overlay_needed_title))
+             .setContentText(getString(R.string.overlay_needed_msg))
+             .setSmallIcon(android.R.drawable.stat_sys_warning)
+             .setAutoCancel(true);
+
+            NotificationManager nm =
+                    (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (nm != null) nm.notify(NOTIFY_PERM_ID, b.build());
+        } catch (Exception ignored) {}
+    }
+
+    private String uidToPackage(int uid) {
+        try {
+            String[] pkgs = getPackageManager().getPackagesForUid(uid);
+            if (pkgs == null || pkgs.length == 0) return getString(R.string.uid_unknown);
+            if (pkgs.length == 1) return pkgs[0];
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < pkgs.length; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(pkgs[i]);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return getString(R.string.uid_unknown);
+        }
     }
 
     private void createChannel() {
@@ -110,6 +157,7 @@ public class DoForegroundService extends Service {
             server.stop();
             server = null;
         }
+        AuthOverlay.dismiss(getApplicationContext());
     }
 
     @Override

@@ -42,29 +42,16 @@ public class DoServer {
         this.callback = callback;
         this.port = port;
         this.bindAddr = bindAddr;
-        this.handler = new CommandHandler(context, port);
+        this.handler = new CommandHandler(context);
     }
 
     public boolean isRunning() {
         return running;
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public String getBindAddr() {
-        return bindAddr;
-    }
-
     public void start() {
-        if (running) {
-            callback.onLog("服务已在运行");
-            return;
-        }
-
+        if (running) return;
         running = true;
-        callback.onStatus("服务启动中...");
 
         serverThread = new Thread(new Runnable() {
             @Override
@@ -72,18 +59,15 @@ public class DoServer {
                 try {
                     serverSocket = new ServerSocket(port, 10,
                             InetAddress.getByName(bindAddr));
+                    callback.onLog("服务已启动，监听 " + bindAddr + ":" + port);
                     callback.onStatus("监听 " + bindAddr + ":" + port);
-                    callback.onLog("服务已启动");
 
                     while (running) {
                         try {
                             Socket client = serverSocket.accept();
-                            callback.onLog("客户端接入: " + client.getRemoteSocketAddress());
                             handleClient(client);
                         } catch (Exception e) {
-                            if (running) {
-                                callback.onLog("连接异常: " + e.getMessage());
-                            }
+                            if (running) callback.onLog("连接异常: " + e.getMessage());
                         }
                     }
                 } catch (Exception e) {
@@ -105,10 +89,13 @@ public class DoServer {
                             new InputStreamReader(client.getInputStream(), "UTF-8"));
                     OutputStream out = client.getOutputStream();
 
-                    String line = reader.readLine();
-                    callback.onLog("收到: " + line);
+                    String remoteIp = client.getInetAddress().getHostAddress();
+                    int remotePort = client.getPort();
 
-                    String response = handler.process(line);
+                    String line = reader.readLine();
+                    callback.onLog("收到来自 " + remoteIp + ":" + remotePort);
+
+                    String response = handler.process(line, -1, remoteIp, remotePort);
 
                     out.write(response.getBytes("UTF-8"));
                     out.write('\n');
@@ -117,10 +104,7 @@ public class DoServer {
 
                 } catch (Exception e) {
                     callback.onLog("处理异常: " + e.getMessage());
-                    try {
-                        client.close();
-                    } catch (Exception ignored) {
-                    }
+                    try { client.close(); } catch (Exception ignored) {}
                 }
             }
         }).start();
@@ -129,14 +113,10 @@ public class DoServer {
     public void stop() {
         running = false;
         try {
-            if (serverSocket != null && !serverSocket.isClosed()) {
+            if (serverSocket != null && !serverSocket.isClosed())
                 serverSocket.close();
-            }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         serverSocket = null;
         serverThread = null;
-        callback.onStatus("服务已停止");
-        callback.onLog("服务已停止");
     }
 }

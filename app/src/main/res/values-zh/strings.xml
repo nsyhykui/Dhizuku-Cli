@@ -1,31 +1,27 @@
-<?xml version="1.1" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dhizuku Cli</string>
 
-    <!-- 按钮 -->
     <string name="btn_check">检测 Dhizuku</string>
     <string name="btn_start">启动 TCP 服务</string>
     <string name="btn_stop">停止 TCP 服务</string>
     <string name="btn_random">随机</string>
+    <string name="btn_uid_manager">授权管理</string>
 
-    <!-- 标签 -->
     <string name="label_port">端口：</string>
     <string name="label_bind">监听：</string>
     <string name="label_key">密钥：</string>
     <string name="label_local_ip">本机局域网 IP: %1$s</string>
 
-    <!-- 监听选项 -->
     <string name="bind_localhost">仅本机 (127.0.0.1)</string>
     <string name="bind_lan">局域网 (0.0.0.0)</string>
 
-    <!-- 状态 -->
     <string name="status_ready">准备就绪</string>
     <string name="status_running">服务运行中</string>
     <string name="status_stopped">服务已停止</string>
     <string name="status_checking_port">正在检查端口 %1$d ...</string>
     <string name="status_port_unavailable">端口不可用</string>
 
-    <!-- 日志 -->
     <string name="log_key_updated">密钥已更新</string>
     <string name="log_key_too_short">密钥太短，至少 8 位</string>
     <string name="log_port_format_error">端口格式错误</string>
@@ -35,4 +31,22 @@
     <string name="log_port_check_failed">端口检查失败: %1$s</string>
     <string name="log_service_started">前台服务已启动，监听 %1$s:%2$d</string>
     <string name="log_service_stopped">前台服务已停止</string>
+
+    <string name="auth_title">授权请求</string>
+    <string name="auth_message">UID %1$d（%2$s）请求访问。\n\n是否允许该 UID 发送命令？</string>
+    <string name="auth_allow">允许</string>
+    <string name="auth_deny">拒绝</string>
+
+    <string name="uid_empty">暂无已知 UID</string>
+    <string name="uid_row">UID %1$d（%2$s）</string>
+    <string name="uid_unknown">未知</string>
+    <string name="uid_grant">授权</string>
+    <string name="uid_revoke">撤销</string>
+    
+    <string name="overlay_title">悬浮窗权限</string>
+    <string name="overlay_message">为了显示授权对话框，本应用需要"显示在其他应用上层"的权限。</string>
+    <string name="overlay_grant">授予</string>
+    <string name="overlay_later">稍后</string>
+    <string name="overlay_needed_title">需要悬浮窗权限</string>
+    <string name="overlay_needed_msg">打开应用以授予悬浮窗权限</string>
 </resources>

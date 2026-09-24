@@ -1,31 +1,27 @@
-<?xml version="1.1" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Dhizuku Cli</string>
 
-    <!-- 按钮 -->
     <string name="btn_check">Check Dhizuku</string>
     <string name="btn_start">Start TCP Service</string>
     <string name="btn_stop">Stop TCP Service</string>
     <string name="btn_random">Random</string>
+    <string name="btn_uid_manager">Manage Authorizations</string>
 
-    <!-- 标签 -->
     <string name="label_port">Port:</string>
     <string name="label_bind">Bind:</string>
     <string name="label_key">Key:</string>
     <string name="label_local_ip">Local IP: %1$s</string>
 
-    <!-- 监听选项 -->
     <string name="bind_localhost">Localhost (127.0.0.1)</string>
     <string name="bind_lan">LAN (0.0.0.0)</string>
 
-    <!-- 状态 -->
     <string name="status_ready">Ready</string>
     <string name="status_running">Service running</string>
     <string name="status_stopped">Service stopped</string>
     <string name="status_checking_port">Checking port %1$d...</string>
     <string name="status_port_unavailable">Port unavailable</string>
 
-    <!-- 日志 -->
     <string name="log_key_updated">Key updated</string>
     <string name="log_key_too_short">Key too short, at least 8 characters</string>
     <string name="log_port_format_error">Invalid port format</string>
@@ -35,4 +31,22 @@
     <string name="log_port_check_failed">Port check failed: %1$s</string>
     <string name="log_service_started">Foreground service started, listening on %1$s:%2$d</string>
     <string name="log_service_stopped">Foreground service stopped</string>
+
+    <string name="auth_title">Authorization Request</string>
+    <string name="auth_message">UID %1$d (%2$s) is requesting access.\n\nAllow this UID to send commands?</string>
+    <string name="auth_allow">Allow</string>
+    <string name="auth_deny">Deny</string>
+
+    <string name="uid_empty">No known UIDs yet</string>
+    <string name="uid_row">UID %1$d (%2$s)</string>
+    <string name="uid_unknown">unknown</string>
+    <string name="uid_grant">Grant</string>
+    <string name="uid_revoke">Revoke</string>
+    
+    <string name="overlay_title">Overlay Permission</string>
+    <string name="overlay_message">To show the authorization dialog, this app needs the "Display over other apps" permission.</string>
+    <string name="overlay_grant">Grant</string>
+    <string name="overlay_later">Later</string>
+    <string name="overlay_needed_title">Overlay Permission Needed</string>
+    <string name="overlay_needed_msg">Open the app to grant overlay permission</string>
 </resources>
