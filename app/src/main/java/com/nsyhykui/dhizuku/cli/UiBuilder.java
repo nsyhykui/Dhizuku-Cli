@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package com.nsyhykui.dhizuku.cli;
 
 import android.app.Activity;
@@ -38,18 +38,26 @@ public class UiBuilder {
     public final Button btnStop;
     public final Button btnRandom;
     public final Button btnUidManager;
+    public final Button btnMode;
+    public final Button btnUpdateCache;
     public final EditText etPort;
     public final EditText etKey;
+    public final EditText etTtl;
     public final Spinner spBind;
+    public final Spinner spTtlUnit;
     public final TextView tvStatus;
     public final TextView tvLog;
+    public final TextView tvLastUpdate;
+    public final LinearLayout ttlRow;
 
     public UiBuilder(Activity a,
                      View.OnClickListener startListener,
                      View.OnClickListener stopListener,
                      View.OnClickListener checkListener,
                      View.OnClickListener randomListener,
-                     View.OnClickListener uidManagerListener) {
+                     View.OnClickListener uidManagerListener,
+                     View.OnClickListener modeListener,
+                     View.OnClickListener updateCacheListener) {
         LinearLayout layout = new LinearLayout(a);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 50, 50, 50);
@@ -62,7 +70,7 @@ public class UiBuilder {
         btnUidManager.setText(R.string.btn_uid_manager);
         btnUidManager.setOnClickListener(uidManagerListener);
 
-        // 端口行
+        /* 端口行 */
         LinearLayout portRow = new LinearLayout(a);
         portRow.setOrientation(LinearLayout.HORIZONTAL);
         portRow.setPadding(0, 20, 0, 0);
@@ -77,7 +85,7 @@ public class UiBuilder {
         portRow.addView(tvPortLabel);
         portRow.addView(etPort);
 
-        // 监听行
+        /* 监听行 */
         LinearLayout bindRow = new LinearLayout(a);
         bindRow.setOrientation(LinearLayout.HORIZONTAL);
         bindRow.setPadding(0, 10, 0, 0);
@@ -86,24 +94,24 @@ public class UiBuilder {
         tvBindLabel.setTextSize(15f);
         tvBindLabel.setPadding(0, 20, 20, 0);
         spBind = new Spinner(a);
-        String[] labels = {
+        String[] bindLabels = {
                 a.getString(R.string.bind_localhost),
                 a.getString(R.string.bind_lan)
         };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                a, android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spBind.setAdapter(adapter);
+        ArrayAdapter<String> bindAdapter = new ArrayAdapter<>(
+                a, android.R.layout.simple_spinner_item, bindLabels);
+        bindAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spBind.setAdapter(bindAdapter);
         bindRow.addView(tvBindLabel);
         bindRow.addView(spBind);
 
-        // 本机 IP
+        /* 本机 IP */
         TextView tvLocalIp = new TextView(a);
         tvLocalIp.setTextSize(13f);
         tvLocalIp.setPadding(0, 10, 0, 10);
         tvLocalIp.setText(a.getString(R.string.label_local_ip, IpUtils.getLocalIp()));
 
-        // 密钥行
+        /* 密钥行 */
         LinearLayout keyRow = new LinearLayout(a);
         keyRow.setOrientation(LinearLayout.HORIZONTAL);
         keyRow.setPadding(0, 10, 0, 0);
@@ -122,6 +130,64 @@ public class UiBuilder {
         keyRow.addView(etKey);
         keyRow.addView(btnRandom);
 
+        /* ============ 更新应用扫描缓存规则 ============ */
+        TextView tvScanTitle = new TextView(a);
+        tvScanTitle.setText(R.string.scan_section_title);
+        tvScanTitle.setTextSize(15f);
+        tvScanTitle.setPadding(0, 40, 0, 10);
+
+        /* 模式行 */
+        LinearLayout modeRow = new LinearLayout(a);
+        modeRow.setOrientation(LinearLayout.HORIZONTAL);
+        modeRow.setPadding(0, 10, 0, 0);
+        TextView tvModeLabel = new TextView(a);
+        tvModeLabel.setText(R.string.scan_mode_label);
+        tvModeLabel.setTextSize(15f);
+        tvModeLabel.setPadding(0, 20, 20, 0);
+        btnMode = new Button(a);
+        btnMode.setOnClickListener(modeListener);
+        modeRow.addView(tvModeLabel);
+        modeRow.addView(btnMode);
+
+        /* TTL 行 */
+        ttlRow = new LinearLayout(a);
+        ttlRow.setOrientation(LinearLayout.HORIZONTAL);
+        ttlRow.setPadding(0, 10, 0, 0);
+        TextView tvTtlLabel = new TextView(a);
+        tvTtlLabel.setText(R.string.scan_ttl_label);
+        tvTtlLabel.setTextSize(15f);
+        tvTtlLabel.setPadding(0, 20, 20, 0);
+        etTtl = new EditText(a);
+        etTtl.setInputType(InputType.TYPE_CLASS_NUMBER
+                | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        etTtl.setLayoutParams(new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        spTtlUnit = new Spinner(a);
+        String[] unitLabels = {
+                a.getString(R.string.scan_ttl_unit_seconds),
+                a.getString(R.string.scan_ttl_unit_minutes),
+                a.getString(R.string.scan_ttl_unit_hours),
+                a.getString(R.string.scan_ttl_unit_days)
+        };
+        ArrayAdapter<String> unitAdapter = new ArrayAdapter<>(
+                a, android.R.layout.simple_spinner_item, unitLabels);
+        unitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spTtlUnit.setAdapter(unitAdapter);
+        ttlRow.addView(tvTtlLabel);
+        ttlRow.addView(etTtl);
+        ttlRow.addView(spTtlUnit);
+
+        /* 上次更新 */
+        tvLastUpdate = new TextView(a);
+        tvLastUpdate.setTextSize(13f);
+        tvLastUpdate.setPadding(0, 10, 0, 10);
+
+        /* 立即更新按钮 */
+        btnUpdateCache = new Button(a);
+        btnUpdateCache.setText(R.string.scan_update_button);
+        btnUpdateCache.setOnClickListener(updateCacheListener);
+
+        /* 服务按钮 */
         btnStart = new Button(a);
         btnStart.setText(R.string.btn_start);
         btnStart.setOnClickListener(startListener);
@@ -143,6 +209,11 @@ public class UiBuilder {
         layout.addView(bindRow);
         layout.addView(tvLocalIp);
         layout.addView(keyRow);
+        layout.addView(tvScanTitle);
+        layout.addView(modeRow);
+        layout.addView(ttlRow);
+        layout.addView(tvLastUpdate);
+        layout.addView(btnUpdateCache);
         layout.addView(btnStart);
         layout.addView(btnStop);
         layout.addView(tvStatus);

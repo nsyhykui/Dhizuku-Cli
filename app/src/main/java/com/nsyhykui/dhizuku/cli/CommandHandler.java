@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package com.nsyhykui.dhizuku.cli;
 
 import android.app.admin.DevicePolicyManager;
@@ -36,6 +36,7 @@ public class CommandHandler {
 
     private final Context context;
     private final DhizukuDpm dpmHelper;
+    private final StatusHandler statusHandler;
 
     private AesGcm aes = null;
     private String cachedKey = null;
@@ -43,51 +44,33 @@ public class CommandHandler {
     public CommandHandler(Context context) {
         this.context = context.getApplicationContext();
         this.dpmHelper = new DhizukuDpm(context);
+        this.statusHandler = new StatusHandler(context, dpmHelper);
     }
 
     public String process(String b64, int realUid, String remoteIp, int remotePort) {
-        // 1. 解密
         String plaintext;
         try {
             byte[] raw = Base64.decode(b64, Base64.DEFAULT);
             plaintext = new String(getAes().decrypt(raw), StandardCharsets.UTF_8);
         } catch (Throwable t) {
-            return "Denied";
+            return "crypto: denied";
         }
 
-        // 2. 解析：UID IP PORT TOTP CMD [ARG]
-        String[] parts = plaintext.trim().split("\\s+", 6);
-        if (parts.length < 5) return "Failed";
+        String[] parts = plaintext.trim().split("\\s+", 5);
+        if (parts.length < 5) return "Failed: bad message format";
 
-        // 3. 取 UID（优先真实 UID，反查失败时用声明的 UID）
         int uid;
-        if (realUid >= 0) {
-            uid = realUid;
-        } else {
-            try {
-                uid = Integer.parseInt(parts[0]);
-            } catch (Exception e) {
-                return "Failed: bad uid";
-            }
+        try {
+            uid = Integer.parseInt(parts[0]);
+        } catch (Exception e) {
+            return "Failed: bad uid";
         }
 
-        // 4. UID 授权（阻塞等待用户响应）
-        int state = AuthManager.get(context).check(uid);
-        if (state == AuthManager.PENDING) {
-            state = AuthManager.get(context).awaitDecision(uid, AUTH_TIMEOUT_MS);
-        }
-        if (state != AuthManager.ALLOWED) {
-            return "Denied";
-        }
-
-        // 5. 剩余字段
         String claimedIp = parts[1];
         String claimedPortStr = parts[2];
         String totp = parts[3];
-        String cmd = parts[4];
-        String arg = parts.length > 5 ? parts[5].trim() : "";
+        String rest = parts[4];
 
-        // 6. 源 IP / 端口校验
         int claimedPort;
         try {
             claimedPort = Integer.parseInt(claimedPortStr);
@@ -99,20 +82,35 @@ public class CommandHandler {
             return "Failed: source mismatch";
         }
 
-        // 7. TOTP
-        if (!Totp.verify(getKey(), totp)) return "Denied";
+        if (!Totp.verify(getKey(), totp)) return "totp: denied";
 
-        // 8. 参数校验
+        if (rest.startsWith("#$%")) return handleMeta(rest);
+
+        int state = AuthManager.get(context).check(uid);
+        if (state == AuthManager.PENDING) {
+            state = AuthManager.get(context).awaitDecision(uid, AUTH_TIMEOUT_MS);
+        }
+        if (state == AuthManager.TIMEOUT) return "timeout";
+        if (state != AuthManager.ALLOWED) return "uid: denied";
+
+        String[] cmdParts = rest.split("\\s+");
+        String cmd = cmdParts[0];
+        String[] args = new String[cmdParts.length - 1];
+        System.arraycopy(cmdParts, 1, args, 0, args.length);
+
+        if (cmd.equals("status")) return statusHandler.handle(args);
+
+        String arg = args.length > 0 ? args[0] : "";
+
         if (cmd.equals("ping") || cmd.equals("lock_now")) {
-            if (!arg.isEmpty()) return "Failed: unexpected argument: " + arg;
+            if (args.length > 0) return "Failed: unexpected argument: " + arg;
         }
         if (cmd.equals("hide") || cmd.equals("unhide") ||
             cmd.equals("suspend") || cmd.equals("resume") ||
             cmd.equals("block_uninstall") || cmd.equals("unblock_uninstall")) {
-            if (arg.isEmpty()) return "Failed: missing package";
+            if (args.length == 0) return "Failed: missing package";
         }
 
-        // 9. 分发
         if (cmd.equals("ping")) return "Success";
         if (cmd.equals("lock_now")) return doLockNow();
         if (cmd.equals("hide")) return doHide(arg, true);
@@ -125,7 +123,12 @@ public class CommandHandler {
         return "Unknown";
     }
 
-    /* ================= 命令实现 ================= */
+    private String handleMeta(String rest) {
+        if (rest.equals("#$%version")) {
+            return "Success " + VersionInfo.getServerVersion(context);
+        }
+        return "Unknown";
+    }
 
     private String doLockNow() {
         try {
@@ -193,8 +196,6 @@ public class CommandHandler {
             return false;
         }
     }
-
-    /* ================= 密钥 / 加密 ================= */
 
     private AesGcm getAes() {
         String key = getKey();

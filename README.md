@@ -31,6 +31,7 @@ Clients for other platforms live in separate repositories:
 - TOTP + AES-GCM: messages are encrypted, the key never travels over the network
 - UID authorization: first-time clients trigger an on-screen prompt
 - Overlay dialog works in the background (HarmonyOS blocks Activity-based prompts)
+- Status queries: hidden apps, suspended apps, uninstall-blocked apps, app permissions
 - Local and LAN listening modes
 - Foreground service with battery optimization exemption
 
@@ -73,6 +74,37 @@ commands from that client run without prompting.
 To manage authorized clients, tap Manage Authorizations on the
 main screen. You can revoke or re-grant any UID from the list.
 
+### Status Commands
+
+| Subcommand | Description |
+|------------|-------------|
+| status hid | List hidden apps |
+| status suspend | List suspended apps |
+| status block_uninstall | List apps with uninstall blocked |
+| status permission update | Rescan all apps and update cache |
+| status permission <perm> | List apps with this permission |
+| status permission --package <pkg> | List all permissions of an app |
+| status permission <perm> --package <pkg> | Query one app's permission state |
+
+### Scan Cache Rules
+
+The app caches app scan results (permissions, hidden / suspended /
+uninstall-blocked states) in a local database. `status` commands read
+from this cache.
+
+Three cache modes:
+
+- **Always**: rescan on every query
+- **Auto**: rescan when cache expires (TTL)
+- **Manual**: only rescan when triggered manually
+
+Configure them under "Update app scan cache rules" in the app:
+
+- **Cache mode**: Always / Auto / Manual
+- **TTL**: time-to-live for Auto mode (seconds / minutes / hours / days)
+- **Last update**: timestamp of the most recent scan
+- **Update cache now**: trigger a manual rescan
+
 ### Security
 
 - The TOTP key is the only credential. Keep it safe.
@@ -93,6 +125,14 @@ perform system-level operations.
 - The author is not liable for any loss caused by this tool
 
 ### Changelog
+
+#### v2.1.0
+
+- Added `status` commands (hid / suspend / block_uninstall / permission)
+- Added scan cache with Always / Auto / Manual modes
+- Added app-side "Update app scan cache rules" settings
+- Server version is now read dynamically from APK
+- Fixed `status hid` not listing hidden apps
 
 #### v2.0.0
 
@@ -137,6 +177,7 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 - TOTP + AES-GCM：消息全程加密，密钥不上网
 - UID 授权：首次连接的客户端会触发屏幕授权弹窗
 - 悬浮窗授权：后台也能弹窗（华为禁止 Activity 方式的后台弹窗）
+- 状态查询：隐藏应用、挂起应用、阻止卸载、应用权限
 - 本机和局域网两种监听模式
 - 前台服务 + 电池优化豁免
 
@@ -178,6 +219,36 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 要管理已授权的客户端，在主界面点授权管理。列表中每个 UID
 都可以撤销或重新授权。
 
+### Status 命令
+
+| 子命令 | 说明 |
+|--------|------|
+| status hid | 列出被隐藏的应用 |
+| status suspend | 列出被挂起的应用 |
+| status block_uninstall | 列出阻止卸载的应用 |
+| status permission update | 重新扫描所有应用并更新缓存 |
+| status permission <权限> | 列出拥有该权限的应用 |
+| status permission --package <包名> | 列出该应用的所有权限 |
+| status permission <权限> --package <包名> | 查询某应用某权限状态 |
+
+### 扫描缓存规则
+
+App 把应用扫描结果（权限、隐藏 / 挂起 / 阻止卸载状态）缓存在
+本地数据库，供 status 命令查询。
+
+三种缓存模式：
+
+- **每次**：每次查询都重新扫描
+- **自动**：缓存过期（TTL）时重新扫描
+- **手动**：只有手动触发才重新扫描
+
+在主界面的"更新应用扫描缓存规则"里配置：
+
+- **更新缓存模式**：每次 / 自动 / 手动
+- **TTL**：自动模式的缓存有效期（秒 / 分钟 / 小时 / 天）
+- **上次更新**：最近一次扫描的时间
+- **立即更新缓存**：手动触发一次扫描
+
 ### 安全说明
 
 - TOTP 密钥是唯一的认证凭据，请妥善保管。
@@ -197,6 +268,14 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 - 作者不对因使用本工具导致的任何损失负责
 
 ### 更新日志
+
+#### v2.1.0
+
+- 新增 status 命令（hid / suspend / block_uninstall / permission）
+- 新增扫描缓存，支持 每次 / 自动 / 手动 三种模式
+- 新增 App 侧"更新应用扫描缓存规则"设置
+- 服务端版本号改为动态读取 APK
+- 修复 status hid 不显示被隐藏应用的问题
 
 #### v2.0.0
 

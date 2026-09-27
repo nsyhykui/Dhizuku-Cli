@@ -42,11 +42,29 @@
     <string name="uid_unknown">unknown</string>
     <string name="uid_grant">Grant</string>
     <string name="uid_revoke">Revoke</string>
-    
+
     <string name="overlay_title">Overlay Permission</string>
     <string name="overlay_message">To show the authorization dialog, this app needs the "Display over other apps" permission.</string>
     <string name="overlay_grant">Grant</string>
     <string name="overlay_later">Later</string>
     <string name="overlay_needed_title">Overlay Permission Needed</string>
     <string name="overlay_needed_msg">Open the app to grant overlay permission</string>
+
+    <string name="scan_section_title">Update app scan cache rules</string>
+    <string name="scan_mode_label">Cache mode:</string>
+    <string name="scan_mode_always">Always</string>
+    <string name="scan_mode_auto">Auto</string>
+    <string name="scan_mode_manual">Manual</string>
+    <string name="scan_ttl_label">TTL:</string>
+    <string name="scan_ttl_unit_seconds">seconds</string>
+    <string name="scan_ttl_unit_minutes">minutes</string>
+    <string name="scan_ttl_unit_hours">hours</string>
+    <string name="scan_ttl_unit_days">days</string>
+    <string name="scan_last_update_label">Last update:</string>
+    <string name="scan_last_update_never">not generated</string>
+    <string name="scan_last_update_na">n/a</string>
+    <string name="scan_update_button">Update cache now</string>
+    <string name="scan_updating">Scanning...</string>
+    <string name="scan_done">Scanned %1$d apps</string>
+    <string name="scan_failed">Scan failed: %1$s</string>
 </resources>

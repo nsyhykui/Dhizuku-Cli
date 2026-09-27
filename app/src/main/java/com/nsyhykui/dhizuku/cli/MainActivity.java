@@ -19,26 +19,20 @@
 package com.nsyhykui.dhizuku.cli;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.security.SecureRandom;
 
 public class MainActivity extends Activity implements CheckCallback, LogCallback {
-
-    private static final String KEY_CHARS = "abcdefghijklmnopqrstuvwxyz";
-    private static final int KEY_LEN = 32;
 
     private UiBuilder ui;
     private PrefsHelper prefs;
     private ServiceController svc;
     private DhizukuChecker checker;
+    private ScanUiController scanUi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,38 +59,46 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
                     @Override public void onClick(View v) {
                         startActivity(new Intent(MainActivity.this, UidManagerActivity.class));
                     }
+                },
+                new View.OnClickListener() {
+                    @Override public void onClick(View v) { scanUi.onModeClicked(); }
+                },
+                new View.OnClickListener() {
+                    @Override public void onClick(View v) { scanUi.onUpdateCacheClicked(); }
                 });
 
+        scanUi = new ScanUiController(this, ui,
+                new ScanSettings(this), new DhizukuDpm(this), this);
+
+        restoreUiFromPrefs();
+        scanUi.init();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        scanUi.onResume();
+    }
+
+    private void restoreUiFromPrefs() {
         ui.etPort.setText(String.valueOf(prefs.getPort()));
+
         String key = prefs.getKey();
         if (key.isEmpty()) {
-            key = generateKey();
+            key = KeyUtils.generate();
             prefs.setKey(key);
         }
         ui.etKey.setText(key);
+
         for (int i = 0; i < UiBuilder.BIND_VALUES.length; i++) {
             if (UiBuilder.BIND_VALUES[i].equals(prefs.getBind())) {
                 ui.spBind.setSelection(i);
                 break;
             }
         }
-
-        // 检查悬浮窗权限
-        if (!AuthOverlay.hasPermission(this)) {
-            new AlertDialog.Builder(this)
-                    .setTitle(R.string.overlay_title)
-                    .setMessage(R.string.overlay_message)
-                    .setPositiveButton(R.string.overlay_grant,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface d, int w) {
-                                    AuthOverlay.requestPermission(MainActivity.this);
-                                }
-                            })
-                    .setNegativeButton(R.string.overlay_later, null)
-                    .show();
-        }
     }
+
+    /* ================= 服务启停 ================= */
 
     private void onStartClicked() {
         String key = ui.etKey.getText().toString().trim();
@@ -136,7 +138,7 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
     }
 
     private void onRandomClicked() {
-        String key = generateKey();
+        String key = KeyUtils.generate();
         ui.etKey.setText(key);
         prefs.setKey(key);
         onLog(getString(R.string.log_key_updated));
@@ -181,12 +183,7 @@ public class MainActivity extends Activity implements CheckCallback, LogCallback
         }
     }
 
-    private String generateKey() {
-        SecureRandom r = new SecureRandom();
-        StringBuilder sb = new StringBuilder(KEY_LEN);
-        for (int i = 0; i < KEY_LEN; i++) sb.append(KEY_CHARS.charAt(r.nextInt(KEY_CHARS.length())));
-        return sb.toString();
-    }
+    /* ================= 回调 ================= */
 
     @Override public void onStatus(String text) { ui.tvStatus.setText(text); }
     @Override public void onAppend(String text) { ui.tvStatus.append(text); }

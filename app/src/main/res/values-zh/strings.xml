@@ -42,11 +42,29 @@
     <string name="uid_unknown">未知</string>
     <string name="uid_grant">授权</string>
     <string name="uid_revoke">撤销</string>
-    
+
     <string name="overlay_title">悬浮窗权限</string>
     <string name="overlay_message">为了显示授权对话框，本应用需要"显示在其他应用上层"的权限。</string>
     <string name="overlay_grant">授予</string>
     <string name="overlay_later">稍后</string>
     <string name="overlay_needed_title">需要悬浮窗权限</string>
     <string name="overlay_needed_msg">打开应用以授予悬浮窗权限</string>
+
+    <string name="scan_section_title">更新应用扫描缓存规则</string>
+    <string name="scan_mode_label">更新缓存模式：</string>
+    <string name="scan_mode_always">每次</string>
+    <string name="scan_mode_auto">自动</string>
+    <string name="scan_mode_manual">手动</string>
+    <string name="scan_ttl_label">TTL：</string>
+    <string name="scan_ttl_unit_seconds">秒</string>
+    <string name="scan_ttl_unit_minutes">分钟</string>
+    <string name="scan_ttl_unit_hours">小时</string>
+    <string name="scan_ttl_unit_days">天</string>
+    <string name="scan_last_update_label">上次更新：</string>
+    <string name="scan_last_update_never">未生成</string>
+    <string name="scan_last_update_na">—</string>
+    <string name="scan_update_button">立即更新缓存</string>
+    <string name="scan_updating">扫描中...</string>
+    <string name="scan_done">已扫描 %1$d 个应用</string>
+    <string name="scan_failed">扫描失败：%1$s</string>
 </resources>
