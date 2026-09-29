@@ -31,7 +31,8 @@ Clients for other platforms live in separate repositories:
 - TOTP + AES-GCM: messages are encrypted, the key never travels over the network
 - UID authorization: first-time clients trigger an on-screen prompt
 - Overlay dialog works in the background (HarmonyOS blocks Activity-based prompts)
-- Status queries: hidden apps, suspended apps, uninstall-blocked apps, app permissions
+- pm-style commands: list packages, query and manage app permissions
+- Status queries: hidden apps, suspended apps, uninstall-blocked apps
 - Local and LAN listening modes
 - Foreground service with battery optimization exemption
 
@@ -74,36 +75,66 @@ commands from that client run without prompting.
 To manage authorized clients, tap Manage Authorizations on the
 main screen. You can revoke or re-grant any UID from the list.
 
-### Status Commands
+### Commands
 
-| Subcommand | Description |
-|------------|-------------|
-| status hid | List hidden apps |
-| status suspend | List suspended apps |
-| status block_uninstall | List apps with uninstall blocked |
-| status permission update | Rescan all apps and update cache |
-| status permission <perm> | List apps with this permission |
-| status permission --package <pkg> | List all permissions of an app |
-| status permission <perm> --package <pkg> | Query one app's permission state |
+Operation commands:
+
+| Command | Description |
+|---------|-------------|
+| ping | Test connection |
+| lock_now | Lock the screen |
+| hide / unhide | Hide / unhide an app |
+| suspend / resume | Suspend / resume an app |
+| block_uninstall / unblock_uninstall | Block / allow uninstall |
+
+Query commands:
+
+| Command | Description |
+|---------|-------------|
+| list hidden | List hidden apps |
+| list suspended | List suspended apps |
+| list blocked | List apps with uninstall blocked |
+| pm list packages [options] | List packages (same as pm list packages) |
+| pm list permissions <perm> | List apps with this permission |
+| pm list permissions --package <pkg> | List all permissions of an app |
+| pm list permissions <perm> --package <pkg> | Query one app's permission state |
+| cache update | Rescan all apps and update cache |
+| status | Show server running status (client-side) |
+
+Permission management commands:
+
+| Command | Description |
+|---------|-------------|
+| pm grant <pkg> <perm> | Grant a runtime permission |
+| pm revoke <pkg> <perm> | Revoke a runtime permission |
+| pm reset <pkg> <perm> | Reset a permission to default |
+
+pm list packages supports the same options as Android's pm list packages:
+-f -d -e -s -3 -i -u -U --uid, plus a package name filter. The only
+exception is --user, which is not supported.
 
 ### Scan Cache Rules
 
 The app caches app scan results (permissions, hidden / suspended /
-uninstall-blocked states) in a local database. `status` commands read
+uninstall-blocked states) in a local database. Query commands read
 from this cache.
 
 Three cache modes:
 
-- **Always**: rescan on every query
-- **Auto**: rescan when cache expires (TTL)
-- **Manual**: only rescan when triggered manually
+- Always: rescan on every query
+- Auto: rescan when cache expires (TTL)
+- Manual: only rescan when triggered manually
 
 Configure them under "Update app scan cache rules" in the app:
 
-- **Cache mode**: Always / Auto / Manual
-- **TTL**: time-to-live for Auto mode (seconds / minutes / hours / days)
-- **Last update**: timestamp of the most recent scan
-- **Update cache now**: trigger a manual rescan
+- Cache mode: Always / Auto / Manual
+- TTL: time-to-live for Auto mode (seconds / minutes / hours / days)
+- Last update: timestamp of the most recent scan
+- Update cache now: trigger a manual rescan
+
+When hide / unhide / suspend / resume / block_uninstall /
+unblock_uninstall / pm grant / revoke / reset succeed, the cache is
+updated immediately. You do not need to run cache update manually.
 
 ### Security
 
@@ -126,13 +157,25 @@ perform system-level operations.
 
 ### Changelog
 
+#### v3.0.0
+
+- Breaking change: command structure and output protocol changed
+- Added pm-style commands (pm list packages / pm list permissions / pm grant / pm revoke / pm reset)
+- Added list hidden / list suspended / list blocked
+- Added cache update
+- Cache is now updated immediately after hide / suspend / block_uninstall / pm grant / revoke / reset
+- Data commands no longer prefix output with Success
+- Server version is read dynamically from the APK
+- Removed: status hid / status suspend / status block_uninstall / status permission xxx
+  (replaced by list hidden / list suspended / list blocked / pm list permissions xxx / cache update)
+
 #### v2.1.0
 
-- Added `status` commands (hid / suspend / block_uninstall / permission)
+- Added status commands (superseded by v3.0.0)
 - Added scan cache with Always / Auto / Manual modes
 - Added app-side "Update app scan cache rules" settings
 - Server version is now read dynamically from APK
-- Fixed `status hid` not listing hidden apps
+- Fixed status hid not listing hidden apps
 
 #### v2.0.0
 
@@ -177,7 +220,8 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 - TOTP + AES-GCM：消息全程加密，密钥不上网
 - UID 授权：首次连接的客户端会触发屏幕授权弹窗
 - 悬浮窗授权：后台也能弹窗（华为禁止 Activity 方式的后台弹窗）
-- 状态查询：隐藏应用、挂起应用、阻止卸载、应用权限
+- pm 风格命令：列应用、查询和管理应用权限
+- 状态查询：隐藏应用、挂起应用、阻止卸载
 - 本机和局域网两种监听模式
 - 前台服务 + 电池优化豁免
 
@@ -219,35 +263,64 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 要管理已授权的客户端，在主界面点授权管理。列表中每个 UID
 都可以撤销或重新授权。
 
-### Status 命令
+### 命令列表
 
-| 子命令 | 说明 |
-|--------|------|
-| status hid | 列出被隐藏的应用 |
-| status suspend | 列出被挂起的应用 |
-| status block_uninstall | 列出阻止卸载的应用 |
-| status permission update | 重新扫描所有应用并更新缓存 |
-| status permission <权限> | 列出拥有该权限的应用 |
-| status permission --package <包名> | 列出该应用的所有权限 |
-| status permission <权限> --package <包名> | 查询某应用某权限状态 |
+操作类命令：
+
+| 命令 | 说明 |
+|------|------|
+| ping | 测试连接 |
+| lock_now | 立即锁屏 |
+| hide / unhide | 隐藏 / 取消隐藏应用 |
+| suspend / resume | 挂起 / 恢复应用 |
+| block_uninstall / unblock_uninstall | 阻止 / 允许卸载 |
+
+查询类命令：
+
+| 命令 | 说明 |
+|------|------|
+| list hidden | 列出被隐藏的应用 |
+| list suspended | 列出被挂起的应用 |
+| list blocked | 列出阻止卸载的应用 |
+| pm list packages [参数] | 列出应用（同 pm list packages） |
+| pm list permissions <权限> | 列出拥有该权限的应用 |
+| pm list permissions --package <包名> | 列出该应用的所有权限 |
+| pm list permissions <权限> --package <包名> | 查询某应用某权限状态 |
+| cache update | 重新扫描所有应用并更新缓存 |
+| status | 显示服务端运行状态（客户端本地处理） |
+
+权限管理命令：
+
+| 命令 | 说明 |
+|------|------|
+| pm grant <包名> <权限> | 授予运行时权限 |
+| pm revoke <包名> <权限> | 拒绝运行时权限 |
+| pm reset <包名> <权限> | 恢复权限到默认状态 |
+
+pm list packages 的参数和 Android 自带的 pm list packages 一致：
+-f -d -e -s -3 -i -u -U --uid，另加包名过滤。唯一不支持的是 --user。
 
 ### 扫描缓存规则
 
 App 把应用扫描结果（权限、隐藏 / 挂起 / 阻止卸载状态）缓存在
-本地数据库，供 status 命令查询。
+本地数据库，供查询类命令读取。
 
 三种缓存模式：
 
-- **每次**：每次查询都重新扫描
-- **自动**：缓存过期（TTL）时重新扫描
-- **手动**：只有手动触发才重新扫描
+- 每次：每次查询都重新扫描
+- 自动：缓存过期（TTL）时重新扫描
+- 手动：只有手动触发才重新扫描
 
 在主界面的"更新应用扫描缓存规则"里配置：
 
-- **更新缓存模式**：每次 / 自动 / 手动
-- **TTL**：自动模式的缓存有效期（秒 / 分钟 / 小时 / 天）
-- **上次更新**：最近一次扫描的时间
-- **立即更新缓存**：手动触发一次扫描
+- 更新缓存模式：每次 / 自动 / 手动
+- TTL：自动模式的缓存有效期（秒 / 分钟 / 小时 / 天）
+- 上次更新：最近一次扫描的时间
+- 立即更新缓存：手动触发一次扫描
+
+hide / unhide / suspend / resume / block_uninstall /
+unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
+更新，不需要手动跑 cache update。
 
 ### 安全说明
 
@@ -269,9 +342,21 @@ App 把应用扫描结果（权限、隐藏 / 挂起 / 阻止卸载状态）缓�
 
 ### 更新日志
 
+#### v3.0.0
+
+- 破坏性更新：命令结构和输出协议都变了
+- 新增 pm 风格命令（pm list packages / pm list permissions / pm grant / pm revoke / pm reset）
+- 新增 list hidden / list suspended / list blocked
+- 新增 cache update
+- hide / suspend / block_uninstall / pm grant / revoke / reset 成功后立即更新缓存
+- 有数据的命令不再带 Success 前缀
+- 服务端版本号从 APK 动态读取
+- 删除：status hid / status suspend / status block_uninstall / status permission xxx
+  （分别由 list hidden / list suspended / list blocked / pm list permissions xxx / cache update 替代）
+
 #### v2.1.0
 
-- 新增 status 命令（hid / suspend / block_uninstall / permission）
+- 新增 status 命令（v3.0.0 中被替代）
 - 新增扫描缓存，支持 每次 / 自动 / 手动 三种模式
 - 新增 App 侧"更新应用扫描缓存规则"设置
 - 服务端版本号改为动态读取 APK
