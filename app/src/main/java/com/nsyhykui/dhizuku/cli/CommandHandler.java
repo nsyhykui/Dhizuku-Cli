@@ -36,7 +36,9 @@ public class CommandHandler {
 
     private final Context context;
     private final DhizukuDpm dpmHelper;
-    private final StatusHandler statusHandler;
+    private final PmHandler pmHandler;
+    private final ListHandler listHandler;
+    private final CacheHandler cacheHandler;
 
     private AesGcm aes = null;
     private String cachedKey = null;
@@ -44,7 +46,9 @@ public class CommandHandler {
     public CommandHandler(Context context) {
         this.context = context.getApplicationContext();
         this.dpmHelper = new DhizukuDpm(context);
-        this.statusHandler = new StatusHandler(context, dpmHelper);
+        this.pmHandler = new PmHandler(context, dpmHelper);
+        this.listHandler = new ListHandler(context, dpmHelper);
+        this.cacheHandler = new CacheHandler(context, dpmHelper);
     }
 
     public String process(String b64, int realUid, String remoteIp, int remotePort) {
@@ -98,7 +102,9 @@ public class CommandHandler {
         String[] args = new String[cmdParts.length - 1];
         System.arraycopy(cmdParts, 1, args, 0, args.length);
 
-        if (cmd.equals("status")) return statusHandler.handle(args);
+        if (cmd.equals("pm")) return pmHandler.handle(args);
+        if (cmd.equals("list")) return listHandler.handle(args);
+        if (cmd.equals("cache")) return cacheHandler.handle(args);
 
         String arg = args.length > 0 ? args[0] : "";
 
@@ -125,7 +131,7 @@ public class CommandHandler {
 
     private String handleMeta(String rest) {
         if (rest.equals("#$%version")) {
-            return "Success " + VersionInfo.getServerVersion(context);
+            return VersionInfo.getServerVersion(context);
         }
         return "Unknown";
     }
@@ -149,7 +155,15 @@ public class CommandHandler {
             DevicePolicyManager dpm = dpmHelper.get();
             ComponentName admin = dpmHelper.admin();
             boolean result = dpm.setApplicationHidden(admin, pkg, hidden);
-            return result ? "Success" : "Failed: setApplicationHidden returned false";
+            if (!result) {
+                return "Failed: setApplicationHidden returned false";
+            }
+
+            ScanCache cache = ScanCache.get(context);
+            if (hidden) cache.addHidden(pkg);
+            else cache.removeHidden(pkg);
+
+            return "Success";
         } catch (Throwable t) {
             return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
         }
@@ -166,6 +180,11 @@ public class CommandHandler {
             if (failed != null && failed.length > 0) {
                 return "Failed: cannot suspend " + failed[0];
             }
+
+            ScanCache cache = ScanCache.get(context);
+            if (suspended) cache.addSuspended(pkg);
+            else cache.removeSuspended(pkg);
+
             return "Success";
         } catch (Throwable t) {
             return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -180,6 +199,11 @@ public class CommandHandler {
             DevicePolicyManager dpm = dpmHelper.get();
             ComponentName admin = dpmHelper.admin();
             dpm.setUninstallBlocked(admin, pkg, blocked);
+
+            ScanCache cache = ScanCache.get(context);
+            if (blocked) cache.addBlocked(pkg);
+            else cache.removeBlocked(pkg);
+
             return "Success";
         } catch (Throwable t) {
             return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();

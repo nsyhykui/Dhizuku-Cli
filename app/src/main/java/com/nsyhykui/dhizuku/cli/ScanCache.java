@@ -69,7 +69,7 @@ public class ScanCache extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /* ================= meta 读写 ================= */
+    /* ================= meta ================= */
 
     private void setMeta(SQLiteDatabase db, String key, String value) {
         db.execSQL("INSERT OR REPLACE INTO " + T_META
@@ -190,10 +190,6 @@ public class ScanCache extends SQLiteOpenHelper {
         return r;
     }
 
-    /**
-     * 读上次扫描记录的错误信息。
-     * 返回 [hidError, susError, blockError]，空字符串表示无错误。
-     */
     public String[] loadErrors() {
         String h = getMeta("hid_error");
         String s = getMeta("sus_error");
@@ -203,5 +199,66 @@ public class ScanCache extends SQLiteOpenHelper {
                 s == null ? "" : s,
                 b == null ? "" : b
         };
+    }
+
+    /* ================= 单条实时更新 ================= */
+
+    private boolean cacheExists() {
+        return getLastScanTime() != 0;
+    }
+
+    /**
+     * 更新某应用某权限的状态。
+     * 缓存不存在时不写。
+     * 表里没这条记录时也不插入。
+     */
+    public void updatePermissionState(String pkg, String perm, String state) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("UPDATE " + T_PERM + " SET state = ? "
+                        + "WHERE package = ? AND permission = ?",
+                new Object[]{state, pkg, perm});
+    }
+
+    public void addHidden(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("INSERT OR REPLACE INTO " + T_HID
+                + " (package) VALUES (?)", new Object[]{pkg});
+    }
+
+    public void removeHidden(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DELETE FROM " + T_HID + " WHERE package = ?",
+                new Object[]{pkg});
+    }
+
+    public void addSuspended(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("INSERT OR REPLACE INTO " + T_SUS
+                + " (package) VALUES (?)", new Object[]{pkg});
+    }
+
+    public void removeSuspended(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DELETE FROM " + T_SUS + " WHERE package = ?",
+                new Object[]{pkg});
+    }
+
+    public void addBlocked(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("INSERT OR REPLACE INTO " + T_BLK
+                + " (package) VALUES (?)", new Object[]{pkg});
+    }
+
+    public void removeBlocked(String pkg) {
+        if (!cacheExists()) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DELETE FROM " + T_BLK + " WHERE package = ?",
+                new Object[]{pkg});
     }
 }
