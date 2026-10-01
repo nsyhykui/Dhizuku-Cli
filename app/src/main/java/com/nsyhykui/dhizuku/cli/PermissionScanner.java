@@ -25,29 +25,26 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class PermissionScanner {
 
-    private static final String S_GRANTED = "granted";
-    private static final String S_DENIED  = "denied";
-    private static final String S_DEFAULT = "default";
+    private static final int MIN_PARALLEL = 16;
 
     private final Context context;
     private final DhizukuDpm dpmHelper;
+    private final ScanSettings settings;
 
     public PermissionScanner(Context ctx, DhizukuDpm dpmHelper) {
         this.context = ctx.getApplicationContext();
         this.dpmHelper = dpmHelper;
+        this.settings = new ScanSettings(context);
     }
 
-    /**
-     * 扫描所有已安装应用。
-     * 关键：必须加 MATCH_DISABLED_COMPONENTS 和 MATCH_UNINSTALLED_PACKAGES，
-     * 否则被 hide 的应用不在列表里，isApplicationHidden 根本不会被调。
-     */
     private static int installFlags() {
         int flags = PackageManager.GET_PERMISSIONS;
         if (Build.VERSION.SDK_INT >= 24) {
@@ -62,52 +59,57 @@ public class PermissionScanner {
         if (dpm == null) throw new IllegalStateException("dpm null");
 
         ComponentName admin = dpmHelper.admin();
-        PackageManager pm = context.getPackageManager();
+        List<PackageInfo> packages =
+                context.getPackageManager().getInstalledPackages(installFlags());
 
-        ScanResult r = new ScanResult();
-
-        List<PackageInfo> packages = pm.getInstalledPackages(installFlags());
-
-        for (PackageInfo pi : packages) {
-            String pkg = pi.packageName;
-            if (pkg == null) continue;
-            r.appCount++;
-
-            if (pi.requestedPermissions != null) {
-                Map<String, String> perms = new HashMap<>();
-                for (String perm : pi.requestedPermissions) {
-                    String state = queryPermState(dpm, admin, pkg, perm);
-                    if (state != null) perms.put(perm, state);
-                }
-                if (!perms.isEmpty()) r.permissions.put(pkg, perms);
+        int threads = settings.getThreads();
+        if (threads <= 1 || packages.size() < MIN_PARALLEL) {
+            ScanResult r = new ScanResult();
+            for (PackageInfo pi : packages) {
+                PackageScanTask.scan(dpm, admin, pi, r);
             }
+            return r;
+        }
+        return scanParallel(dpm, admin, packages, threads);
+    }
 
-            try {
-                if (dpm.isApplicationHidden(admin, pkg)) r.hid.add(pkg);
-            } catch (Throwable t) {
-                if (r.hidError == null) {
-                    r.hidError = t.getClass().getSimpleName() + ": " + t.getMessage();
-                }
-            }
+    private ScanResult scanParallel(DevicePolicyManager dpm, ComponentName admin,
+                                    List<PackageInfo> packages, int threads) throws Exception {
+        int count = Math.min(threads, packages.size());
+        int chunkSize = (packages.size() + count - 1) / count;
 
-            try {
-                if (dpm.isPackageSuspended(admin, pkg)) r.suspend.add(pkg);
-            } catch (Throwable t) {
-                if (r.susError == null) {
-                    r.susError = t.getClass().getSimpleName() + ": " + t.getMessage();
-                }
-            }
-
-            try {
-                if (dpm.isUninstallBlocked(admin, pkg)) r.block.add(pkg);
-            } catch (Throwable t) {
-                if (r.blockError == null) {
-                    r.blockError = t.getClass().getSimpleName() + ": " + t.getMessage();
-                }
-            }
+        List<List<PackageInfo>> chunks = new ArrayList<>();
+        for (int i = 0; i < packages.size(); i += chunkSize) {
+            chunks.add(packages.subList(i, Math.min(i + chunkSize, packages.size())));
         }
 
-        return r;
+        ExecutorService pool = Executors.newFixedThreadPool(chunks.size());
+        List<Future<ScanResult>> futures = new ArrayList<>();
+        for (final List<PackageInfo> chunk : chunks) {
+            futures.add(pool.submit(() -> {
+                ScanResult part = new ScanResult();
+                for (PackageInfo pi : chunk) {
+                    PackageScanTask.scan(dpm, admin, pi, part);
+                }
+                return part;
+            }));
+        }
+        pool.shutdown();
+
+        ScanResult merged = new ScanResult();
+        for (Future<ScanResult> f : futures) merge(merged, f.get());
+        return merged;
+    }
+
+    private void merge(ScanResult dst, ScanResult src) {
+        dst.permissions.putAll(src.permissions);
+        dst.hid.addAll(src.hid);
+        dst.suspend.addAll(src.suspend);
+        dst.block.addAll(src.block);
+        dst.appCount += src.appCount;
+        if (dst.hidError == null) dst.hidError = src.hidError;
+        if (dst.susError == null) dst.susError = src.susError;
+        if (dst.blockError == null) dst.blockError = src.blockError;
     }
 
     public int scanAndCache() throws Exception {
@@ -118,19 +120,5 @@ public class PermissionScanner {
 
     public String[] getLastErrors() {
         return ScanCache.get(context).loadErrors();
-    }
-
-    private String queryPermState(DevicePolicyManager dpm,
-                                  ComponentName admin,
-                                  String pkg, String perm) {
-        try {
-            int state = dpm.getPermissionGrantState(admin, pkg, perm);
-            if (state == DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED) return S_GRANTED;
-            if (state == DevicePolicyManager.PERMISSION_GRANT_STATE_DENIED)  return S_DENIED;
-            if (state == DevicePolicyManager.PERMISSION_GRANT_STATE_DEFAULT) return S_DEFAULT;
-            return null;
-        } catch (Throwable t) {
-            return null;
-        }
     }
 }

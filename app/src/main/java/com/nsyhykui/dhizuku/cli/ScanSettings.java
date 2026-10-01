@@ -26,12 +26,17 @@ public class ScanSettings {
     private static final String PREFS = "do_server_prefs";
     private static final String KEY_MODE = "cache_mode";
     private static final String KEY_TTL = "cache_ttl_seconds";
+    private static final String KEY_THREADS = "scan_threads";
 
     public static final String MODE_ALWAYS = "always";
     public static final String MODE_AUTO = "auto";
     public static final String MODE_MANUAL = "manual";
 
     public static final double DEFAULT_TTL_SECONDS = 300.0;
+
+    public static final int DEFAULT_THREADS = 4;
+    public static final int MIN_THREADS = 1;
+    public static final int MAX_THREADS = 8;
 
     private final SharedPreferences sp;
 
@@ -58,6 +63,19 @@ public class ScanSettings {
 
     public void setTtlSeconds(double seconds) {
         sp.edit().putString(KEY_TTL, String.valueOf(seconds)).apply();
+    }
+
+    public int getThreads() {
+        int v = sp.getInt(KEY_THREADS, DEFAULT_THREADS);
+        if (v < MIN_THREADS) v = MIN_THREADS;
+        if (v > MAX_THREADS) v = MAX_THREADS;
+        return v;
+    }
+
+    public void setThreads(int n) {
+        if (n < MIN_THREADS) n = MIN_THREADS;
+        if (n > MAX_THREADS) n = MAX_THREADS;
+        sp.edit().putInt(KEY_THREADS, n).apply();
     }
 
     public boolean shouldRescan(long lastScanTime) {

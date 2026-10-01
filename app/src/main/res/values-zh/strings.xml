@@ -67,4 +67,9 @@
     <string name="scan_updating">扫描中...</string>
     <string name="scan_done">已扫描 %1$d 个应用</string>
     <string name="scan_failed">扫描失败：%1$s</string>
+    
+    <string name="scan_threads_label">线程数 (1-8)：</string>
+    
+    <string name="scan_save_button">保存全部设置</string>
+    <string name="scan_settings_saved">设置已保存</string>
 </resources>

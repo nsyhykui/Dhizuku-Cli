@@ -67,4 +67,9 @@
     <string name="scan_updating">Scanning...</string>
     <string name="scan_done">Scanned %1$d apps</string>
     <string name="scan_failed">Scan failed: %1$s</string>
+    
+    <string name="scan_threads_label">Threads (1-8):</string>
+    
+    <string name="scan_save_button">Save all settings</string>
+    <string name="scan_settings_saved">Settings saved</string>
 </resources>

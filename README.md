@@ -33,6 +33,7 @@ Clients for other platforms live in separate repositories:
 - Overlay dialog works in the background (HarmonyOS blocks Activity-based prompts)
 - pm-style commands: list packages, query and manage app permissions
 - Status queries: hidden apps, suspended apps, uninstall-blocked apps
+- Parallel app scanning with configurable thread count
 - Local and LAN listening modes
 - Foreground service with battery optimization exemption
 
@@ -60,6 +61,15 @@ All releases are on the Releases page.
    - LAN: devices on the same network can connect
 5. A key is generated automatically; tap Random to regenerate
 6. Tap Start TCP Service; a persistent notification will appear
+
+Under "Update app scan cache rules":
+
+- Cache mode: Always / Auto / Manual
+- TTL: time-to-live for Auto mode (seconds / minutes / hours / days)
+- Threads: number of parallel scan threads (1-8, default 4)
+- Last update: timestamp of the most recent scan
+- Update cache now: trigger a manual rescan
+- Save all settings: writes port, key, bind address, TTL and thread count to disk
 
 ### Authorization
 
@@ -98,7 +108,7 @@ Query commands:
 | pm list permissions <perm> | List apps with this permission |
 | pm list permissions --package <pkg> | List all permissions of an app |
 | pm list permissions <perm> --package <pkg> | Query one app's permission state |
-| cache update | Rescan all apps and update cache |
+| cache update | Rescan all apps and update cache (parallel, thread count configurable in the app) |
 | status | Show server running status (client-side) |
 
 Permission management commands:
@@ -128,12 +138,9 @@ Three cache modes:
 - Auto: rescan when cache expires (TTL)
 - Manual: only rescan when triggered manually
 
-Configure them under "Update app scan cache rules" in the app:
-
-- Cache mode: Always / Auto / Manual
-- TTL: time-to-live for Auto mode (seconds / minutes / hours / days)
-- Last update: timestamp of the most recent scan
-- Update cache now: trigger a manual rescan
+Scanning runs in parallel. Thread count is configurable (1-8, default 4).
+Higher thread counts reduce scan time, but the gain flattens out after a
+certain point depending on the device.
 
 When hide / unhide / suspend / resume / block_uninstall /
 unblock_uninstall / pm grant / revoke / reset succeed, the cache is
@@ -159,6 +166,12 @@ perform system-level operations.
 - The author is not liable for any loss caused by this tool
 
 ### Changelog
+
+#### v3.1.0
+
+- Parallel app scanning, configurable thread count (1-8, default 4)
+- Added "Save all settings" button (port, key, bind, TTL, threads)
+- cache update is now significantly faster on multi-core devices
 
 #### v3.0.3
 
@@ -267,6 +280,7 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 - 悬浮窗授权：后台也能弹窗（华为禁止 Activity 方式的后台弹窗）
 - pm 风格命令：列应用、查询和管理应用权限
 - 状态查询：隐藏应用、挂起应用、阻止卸载
+- 并行扫描，线程数可配置
 - 本机和局域网两种监听模式
 - 前台服务 + 电池优化豁免
 
@@ -294,6 +308,15 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
    - 局域网：允许同网络设备连接
 5. 密钥自动生成，可点随机重新生成
 6. 点启动 TCP 服务，状态栏出现常驻通知即成功
+
+在"更新应用扫描缓存规则"里：
+
+- 更新缓存模式：每次 / 自动 / 手动
+- TTL：自动模式的缓存有效期（秒 / 分钟 / 小时 / 天）
+- 线程数：并行扫描的线程数（1-8，默认 4）
+- 上次更新：最近一次扫描的时间
+- 立即更新缓存：手动触发一次扫描
+- 保存全部设置：把端口、密钥、绑定地址、TTL 和线程数写入本地
 
 ### 授权
 
@@ -331,7 +354,7 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 | pm list permissions <权限> | 列出拥有该权限的应用 |
 | pm list permissions --package <包名> | 列出该应用的所有权限 |
 | pm list permissions <权限> --package <包名> | 查询某应用某权限状态 |
-| cache update | 重新扫描所有应用并更新缓存 |
+| cache update | 重新扫描所有应用并更新缓存（并行，线程数可在 App 内配置） |
 | status | 显示服务端运行状态（客户端本地处理） |
 
 权限管理命令：
@@ -359,12 +382,8 @@ App 把应用扫描结果（权限、隐藏 / 挂起 / 阻止卸载状态）缓�
 - 自动：缓存过期（TTL）时重新扫描
 - 手动：只有手动触发才重新扫描
 
-在主界面的"更新应用扫描缓存规则"里配置：
-
-- 更新缓存模式：每次 / 自动 / 手动
-- TTL：自动模式的缓存有效期（秒 / 分钟 / 小时 / 天）
-- 上次更新：最近一次扫描的时间
-- 立即更新缓存：手动触发一次扫描
+扫描采用并行方式。线程数可配置（1-8，默认 4）。线程数越高扫描越快，
+但超过某个值后收益会趋于平缓，具体取决于设备。
 
 hide / unhide / suspend / resume / block_uninstall /
 unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
@@ -390,13 +409,19 @@ unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
 
 ### 更新日志
 
+#### v3.1.0
+
+- 并行扫描，线程数可配置（1-8，默认 4）
+- 新增"保存全部设置"按钮（端口、密钥、绑定、TTL、线程数）
+- cache update 在多核设备上速度显著提升
+
 #### v3.0.3
 
-- unhide / resume / unblock_uninstall 在包不存在时返回“未安装”，不再误报 Success
+- unhide / resume / unblock_uninstall 在包不存在时返回"未安装"，不再误报 Success
 
 #### v3.0.2
 
-- 修复：对被隐藏的应用执行 hide / suspend / block_uninstall 时误报“未安装”
+- 修复：对被隐藏的应用执行 hide / suspend / block_uninstall 时误报"未安装"
 - 修复：pm grant / revoke / reset 在失败时误报 Success，非运行时权限可能卡约 20 秒
 - pm grant / revoke / reset 现在会提前拒绝非运行时权限
 

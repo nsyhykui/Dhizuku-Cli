@@ -40,9 +40,11 @@ public class UiBuilder {
     public final Button btnUidManager;
     public final Button btnMode;
     public final Button btnUpdateCache;
+    public final Button btnSave;
     public final EditText etPort;
     public final EditText etKey;
     public final EditText etTtl;
+    public final EditText etThreads;
     public final Spinner spBind;
     public final Spinner spTtlUnit;
     public final TextView tvStatus;
@@ -177,6 +179,21 @@ public class UiBuilder {
         ttlRow.addView(etTtl);
         ttlRow.addView(spTtlUnit);
 
+        /* 线程数行 */
+        LinearLayout threadsRow = new LinearLayout(a);
+        threadsRow.setOrientation(LinearLayout.HORIZONTAL);
+        threadsRow.setPadding(0, 10, 0, 0);
+        TextView tvThreadsLabel = new TextView(a);
+        tvThreadsLabel.setText(R.string.scan_threads_label);
+        tvThreadsLabel.setTextSize(15f);
+        tvThreadsLabel.setPadding(0, 20, 20, 0);
+        etThreads = new EditText(a);
+        etThreads.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etThreads.setLayoutParams(new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        threadsRow.addView(tvThreadsLabel);
+        threadsRow.addView(etThreads);
+
         /* 上次更新 */
         tvLastUpdate = new TextView(a);
         tvLastUpdate.setTextSize(13f);
@@ -186,6 +203,10 @@ public class UiBuilder {
         btnUpdateCache = new Button(a);
         btnUpdateCache.setText(R.string.scan_update_button);
         btnUpdateCache.setOnClickListener(updateCacheListener);
+
+        /* 保存按钮（监听器在 ScanUiController 里绑定） */
+        btnSave = new Button(a);
+        btnSave.setText(R.string.scan_save_button);
 
         /* 服务按钮 */
         btnStart = new Button(a);
@@ -212,8 +233,10 @@ public class UiBuilder {
         layout.addView(tvScanTitle);
         layout.addView(modeRow);
         layout.addView(ttlRow);
+        layout.addView(threadsRow);
         layout.addView(tvLastUpdate);
         layout.addView(btnUpdateCache);
+        layout.addView(btnSave);
         layout.addView(btnStart);
         layout.addView(btnStop);
         layout.addView(tvStatus);
