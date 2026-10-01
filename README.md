@@ -113,6 +113,9 @@ pm list packages supports the same options as Android's pm list packages:
 -f -d -e -s -3 -i -u -U --uid, plus a package name filter. The only
 exception is --user, which is not supported.
 
+Missing a command you need? Open an issue:
+https://github.com/nsyhykui/Dhizuku-Cli/issues
+
 ### Scan Cache Rules
 
 The app caches app scan results (permissions, hidden / suspended /
@@ -331,6 +334,9 @@ dhizuku-cli 是 dhizuku-cli 项目的 Android 服务端 App。
 
 pm list packages 的参数和 Android 自带的 pm list packages 一致：
 -f -d -e -s -3 -i -u -U --uid，另加包名过滤。唯一不支持的是 --user。
+
+缺少你需要的功能？欢迎提 Issue：
+https://github.com/nsyhykui/Dhizuku-Cli/issues
 
 ### 扫描缓存规则
 
