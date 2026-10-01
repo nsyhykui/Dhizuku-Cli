@@ -157,6 +157,10 @@ perform system-level operations.
 
 ### Changelog
 
+#### v3.0.1
+
+- Disabled allowBackup to prevent the TOTP key from being included in system backups
+
 #### v3.0.0
 
 - Breaking change: command structure and output protocol changed
@@ -369,6 +373,10 @@ unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
 - 作者不对因使用本工具导致的任何损失负责
 
 ### 更新日志
+
+#### v3.0.1
+
+- 关闭 allowBackup，避免 TOTP 密钥被系统备份
 
 #### v3.0.0
 
