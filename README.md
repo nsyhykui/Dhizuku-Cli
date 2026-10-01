@@ -196,6 +196,34 @@ perform system-level operations.
 - First release
 - Commands: ping, lock_now, hide, unhide
 
+### Acknowledgements
+
+This project depends on the following open-source projects:
+
+- [Dhizuku-API](https://github.com/iamr0s/Dhizuku-API) (MIT) — provides the Device Owner API
+- [AndroidHiddenApiBypass](https://github.com/LSPosed/AndroidHiddenApiBypass) (Apache 2.0) — bypasses Android hidden API restrictions
+- [AndroidX Core](https://developer.android.com/jetpack/androidx/releases/core) (Apache 2.0) — provides BundleCompat and other compat utilities
+
+Reference implementations:
+
+- [OwnDroid](https://github.com/BinTianqi/OwnDroid) (GPL-3.0) — the DevicePolicyManager binder wrapping approach is based on this project
+
+Development tools:
+
+- [CodeAssist](https://github.com/tyron12233/CodeAssist) (GPL-3.0) — IDE used for on-device development
+
+Other:
+
+- [Dhizuku](https://github.com/iamr0s/Dhizuku) (GPL-3.0) — the host environment this project serves
+
+Thanks to all authors and community contributors.
+
+### Note
+
+The code of this project is primarily AI-assisted; the author is responsible for design, debugging and testing.
+
+This project is for learning and personal research only. The author makes no warranty regarding the completeness, security or fitness of the code.
+
 ---
 
 ## 简体中文
@@ -380,6 +408,34 @@ unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
 
 - 首个版本
 - 命令：ping、lock_now、hide、unhide
+
+### 致谢
+
+本项目依赖以下开源项目：
+
+- [Dhizuku-API](https://github.com/iamr0s/Dhizuku-API)（MIT）—— 提供 Device Owner 权限调用接口
+- [AndroidHiddenApiBypass](https://github.com/LSPosed/AndroidHiddenApiBypass)（Apache 2.0）—— 绕过 Android 隐藏 API 限制
+- [AndroidX Core](https://developer.android.com/jetpack/androidx/releases/core)（Apache 2.0）—— 提供 BundleCompat 等兼容性工具
+
+参考了以下项目的实现：
+
+- [OwnDroid](https://github.com/BinTianqi/OwnDroid)（GPL-3.0）—— DevicePolicyManager 的 binder 包装方案参考自此项目
+
+使用以下项目进行开发：
+
+- [CodeAssist](https://github.com/tyron12233/CodeAssist)（GPL-3.0）—— 本项目在手机端开发所用的 IDE
+
+其他：
+
+- [Dhizuku](https://github.com/iamr0s/Dhizuku)（GPL-3.0）—— 本项目所服务的宿主环境
+
+感谢以上项目的作者和社区贡献者。
+
+### 说明
+
+本项目代码由 AI 辅助生成，作者负责设计、调试与测试。
+
+项目仅供学习与个人研究使用，作者不对代码的完整性、安全性、适用性作任何担保。
 
 ---
 
