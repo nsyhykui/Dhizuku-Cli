@@ -160,6 +160,10 @@ perform system-level operations.
 
 ### Changelog
 
+#### v3.0.3
+
+- unhide / resume / unblock_uninstall now report "package not installed" instead of a misleading Success when the package does not exist
+
 #### v3.0.2
 
 - Fixed: hide / suspend / block_uninstall rejected already-hidden apps as "not installed"
@@ -385,6 +389,10 @@ unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
 - 作者不对因使用本工具导致的任何损失负责
 
 ### 更新日志
+
+#### v3.0.3
+
+- unhide / resume / unblock_uninstall 在包不存在时返回“未安装”，不再误报 Success
 
 #### v3.0.2
 

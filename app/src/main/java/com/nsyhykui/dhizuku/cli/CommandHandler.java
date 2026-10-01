@@ -148,7 +148,7 @@ public class CommandHandler {
     }
 
     private String doHide(String pkg, boolean hidden) {
-        if (hidden && !isPackageInstalled(pkg)) {
+        if (!isPackageInstalled(pkg)) {
             return "Failed: package not installed";
         }
         try {
@@ -170,7 +170,7 @@ public class CommandHandler {
     }
 
     private String doSuspend(String pkg, boolean suspended) {
-        if (suspended && !isPackageInstalled(pkg)) {
+        if (!isPackageInstalled(pkg)) {
             return "Failed: package not installed";
         }
         try {
@@ -192,7 +192,7 @@ public class CommandHandler {
     }
 
     private String doBlockUninstall(String pkg, boolean blocked) {
-        if (blocked && !isPackageInstalled(pkg)) {
+        if (!isPackageInstalled(pkg)) {
             return "Failed: package not installed";
         }
         try {
