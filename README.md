@@ -160,6 +160,12 @@ perform system-level operations.
 
 ### Changelog
 
+#### v3.0.2
+
+- Fixed: hide / suspend / block_uninstall rejected already-hidden apps as "not installed"
+- Fixed: pm grant / revoke / reset reported Success on failure and could block for ~20s on non-runtime permissions
+- pm grant / revoke / reset now reject non-runtime permissions early
+
 #### v3.0.1
 
 - Disabled allowBackup to prevent the TOTP key from being included in system backups
@@ -379,6 +385,12 @@ unblock_uninstall / pm grant / revoke / reset 成功后，缓存会立即
 - 作者不对因使用本工具导致的任何损失负责
 
 ### 更新日志
+
+#### v3.0.2
+
+- 修复：对被隐藏的应用执行 hide / suspend / block_uninstall 时误报“未安装”
+- 修复：pm grant / revoke / reset 在失败时误报 Success，非运行时权限可能卡约 20 秒
+- pm grant / revoke / reset 现在会提前拒绝非运行时权限
 
 #### v3.0.1
 

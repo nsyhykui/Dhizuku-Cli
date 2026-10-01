@@ -21,6 +21,8 @@ package com.nsyhykui.dhizuku.cli;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 
 public class PmGrantHandler {
 
@@ -49,6 +51,10 @@ public class PmGrantHandler {
             return "Failed: package not installed";
         }
 
+        if (!isRuntimePermission(perm)) {
+            return "Failed: not a runtime permission: " + perm;
+        }
+
         int state;
         String stateName;
         switch (mode) {
@@ -71,7 +77,10 @@ public class PmGrantHandler {
             if (dpm == null) return "Failed: dpm null";
 
             ComponentName admin = dpmHelper.admin();
-            dpm.setPermissionGrantState(admin, pkg, perm, state);
+            boolean result = dpm.setPermissionGrantState(admin, pkg, perm, state);
+            if (!result) {
+                return "Failed: setPermissionGrantState returned false";
+            }
 
             /* 成功后实时更新缓存 */
             ScanCache.get(context).updatePermissionState(pkg, perm, stateName);
@@ -90,8 +99,25 @@ public class PmGrantHandler {
 
     private boolean isPackageInstalled(String pkg) {
         try {
-            context.getPackageManager().getPackageInfo(pkg, 0);
+            int flags = PackageManager.MATCH_UNINSTALLED_PACKAGES
+                      | PackageManager.MATCH_DISABLED_COMPONENTS;
+            context.getPackageManager().getPackageInfo(pkg, flags);
             return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * 只允许运行时权限（dangerous）。
+     * 非运行时权限调用 setPermissionGrantState 会返回 false，
+     * 且在部分系统（如华为）上会卡约 20 秒。提前拒绝。
+     */
+    private boolean isRuntimePermission(String perm) {
+        try {
+            PermissionInfo info = context.getPackageManager()
+                    .getPermissionInfo(perm, 0);
+            return (info.protectionLevel & PermissionInfo.PROTECTION_DANGEROUS) != 0;
         } catch (Throwable t) {
             return false;
         }

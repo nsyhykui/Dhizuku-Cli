@@ -42,8 +42,8 @@ compileSdk = 37
 minSdk = 26
 targetSdk = 30
 manifest = "src/main/AndroidManifest.xml"
-versionCode = 3
-versionName = "3.0.1"
+versionCode = 30002
+versionName = "3.0.2"
 isApplication = true
 manifestPlaceholders = []
 buildTypes = [{ name = "debug", debuggable = true, minifyEnabled = false, shrinkResources = false }, { name = "dhizuku-cli-release", debuggable = false, minifyEnabled = false, shrinkResources = false, proguardFiles = ["proguard-android-optimize.txt", "proguard-rules.pro"], signingConfig = "release" }]

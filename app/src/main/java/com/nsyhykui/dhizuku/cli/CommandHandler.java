@@ -212,7 +212,9 @@ public class CommandHandler {
 
     private boolean isPackageInstalled(String pkg) {
         try {
-            context.getPackageManager().getPackageInfo(pkg, 0);
+            int flags = PackageManager.MATCH_UNINSTALLED_PACKAGES
+                      | PackageManager.MATCH_DISABLED_COMPONENTS;
+            context.getPackageManager().getPackageInfo(pkg, flags);
             return true;
         } catch (PackageManager.NameNotFoundException e) {
             return false;
