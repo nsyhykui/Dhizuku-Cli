@@ -1,0 +1,35 @@
+THANKS
+======
+
+This project depends on the following open-source projects:
+
+  Dhizuku-API (MIT) — provides the Device Owner API
+    https://github.com/iamr0s/Dhizuku-API
+
+  AndroidHiddenApiBypass (Apache 2.0) — bypasses Android hidden API restrictions
+    https://github.com/LSPosed/AndroidHiddenApiBypass
+
+  AndroidX Core (Apache 2.0) — provides BundleCompat and other compat utilities
+    https://developer.android.com/jetpack/androidx/releases/core
+
+
+Reference implementations:
+
+  OwnDroid (GPL-3.0) — the DevicePolicyManager binder wrapping approach
+  is based on this project
+    https://github.com/BinTianqi/OwnDroid
+
+
+Development tools:
+
+  CodeAssist (GPL-3.0) — IDE used for on-device development
+    https://github.com/tyron12233/CodeAssist
+
+
+Other:
+
+  Dhizuku (GPL-3.0) — the host environment this project serves
+    https://github.com/iamr0s/Dhizuku
+
+
+Thanks to all authors and community contributors.

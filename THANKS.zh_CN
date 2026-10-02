@@ -1,0 +1,35 @@
+THANKS
+======
+
+本项目依赖以下开源项目：
+
+  Dhizuku-API（MIT）—— 提供 Device Owner 权限调用接口
+    https://github.com/iamr0s/Dhizuku-API
+
+  AndroidHiddenApiBypass（Apache 2.0）—— 绕过 Android 隐藏 API 限制
+    https://github.com/LSPosed/AndroidHiddenApiBypass
+
+  AndroidX Core（Apache 2.0）—— 提供 BundleCompat 等兼容性工具
+    https://developer.android.com/jetpack/androidx/releases/core
+
+
+参考了以下项目的实现：
+
+  OwnDroid（GPL-3.0）—— DevicePolicyManager 的 binder 包装方案
+  参考自此项目
+    https://github.com/BinTianqi/OwnDroid
+
+
+使用以下项目进行开发：
+
+  CodeAssist（GPL-3.0）—— 本项目在手机端开发所用的 IDE
+    https://github.com/tyron12233/CodeAssist
+
+
+其他：
+
+  Dhizuku（GPL-3.0）—— 本项目所服务的宿主环境
+    https://github.com/iamr0s/Dhizuku
+
+
+感谢以上项目的作者和社区贡献者。
