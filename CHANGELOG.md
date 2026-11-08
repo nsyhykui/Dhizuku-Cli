@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## v3.2.0
+
+- Added camera_off / camera_on (setCameraDisabled)
+- Added screencap_off / screencap_on (setScreenCaptureDisabled)
+- Added screen_timeout <seconds> (setMaximumTimeToLock, 0 to clear)
+- Code refactored: OperationHandler extracted from CommandHandler
+
 ## v3.1.0
 
 - Parallel app scanning, configurable thread count (1-8, default 4)

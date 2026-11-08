@@ -9,6 +9,9 @@
 | hide / unhide | Hide / unhide an app |
 | suspend / resume | Suspend / resume an app |
 | block_uninstall / unblock_uninstall | Block / allow uninstall |
+| camera_off / camera_on | Disable / enable the camera |
+| screencap_off / screencap_on | Disable / enable screen capture |
+| screen_timeout <seconds> | Set maximum time to lock screen (0 to clear) |
 
 ## Query commands
 

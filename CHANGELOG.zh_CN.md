@@ -2,6 +2,13 @@
 
 本文件记录本项目所有重要变更。
 
+## v3.2.0
+
+- 新增 camera_off / camera_on（禁用/恢复摄像头）
+- 新增 screencap_off / screencap_on（禁止/允许截屏）
+- 新增 screen_timeout <秒>（设置最大息屏时间，填 0 恢复默认）
+- 代码重构：从 CommandHandler 中拆分出 OperationHandler
+
 ## v3.1.0
 
 - 并行扫描，线程数可配置（1-8，默认 4）

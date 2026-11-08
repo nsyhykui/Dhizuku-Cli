@@ -9,6 +9,9 @@
 | hide / unhide | 隐藏 / 取消隐藏应用 |
 | suspend / resume | 挂起 / 恢复应用 |
 | block_uninstall / unblock_uninstall | 阻止 / 允许卸载 |
+| camera_off / camera_on | 禁用 / 恢复摄像头 |
+| screencap_off / screencap_on | 禁止 / 允许截屏 |
+| screen_timeout <秒> | 设置最大息屏时间（填 0 恢复系统默认） |
 
 ## 查询类命令
 

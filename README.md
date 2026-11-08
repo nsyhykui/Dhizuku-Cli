@@ -47,6 +47,7 @@ Client versions are always one major version behind the server.
 
 | Server version | Required client version |
 |----------------|-------------------------|
+| 3.2            | 2.1                     |
 | 3.1 / 3.0      | 2.0                     |
 | 2.1            | 1.1                     |
 | 2.0            | 1.0                     |

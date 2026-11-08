@@ -18,11 +18,8 @@
 
 package com.nsyhykui.dhizuku.cli;
 
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.util.Base64;
 
 import java.nio.charset.StandardCharsets;
@@ -31,24 +28,24 @@ public class CommandHandler {
 
     private static final String PREFS = "do_server_prefs";
     private static final String KEY_AUTH = "auth_key";
-
     private static final long AUTH_TIMEOUT_MS = 60_000;
 
     private final Context context;
-    private final DhizukuDpm dpmHelper;
     private final PmHandler pmHandler;
     private final ListHandler listHandler;
     private final CacheHandler cacheHandler;
+    private final OperationHandler operationHandler;
 
     private AesGcm aes = null;
     private String cachedKey = null;
 
     public CommandHandler(Context context) {
         this.context = context.getApplicationContext();
-        this.dpmHelper = new DhizukuDpm(context);
+        DhizukuDpm dpmHelper = new DhizukuDpm(context);
         this.pmHandler = new PmHandler(context, dpmHelper);
         this.listHandler = new ListHandler(context, dpmHelper);
         this.cacheHandler = new CacheHandler(context, dpmHelper);
+        this.operationHandler = new OperationHandler(context, dpmHelper);
     }
 
     public String process(String b64, int realUid, String remoteIp, int remotePort) {
@@ -88,7 +85,10 @@ public class CommandHandler {
 
         if (!Totp.verify(getKey(), totp)) return "totp: denied";
 
-        if (rest.startsWith("#$%")) return handleMeta(rest);
+        if (rest.startsWith("#$%")) {
+            if (rest.equals("#$%version")) return VersionInfo.getServerVersion(context);
+            return "Unknown";
+        }
 
         int state = AuthManager.get(context).check(uid);
         if (state == AuthManager.PENDING) {
@@ -108,7 +108,10 @@ public class CommandHandler {
 
         String arg = args.length > 0 ? args[0] : "";
 
-        if (cmd.equals("ping") || cmd.equals("lock_now")) {
+        // 参数校验
+        if (cmd.equals("ping") || cmd.equals("lock_now") || 
+            cmd.equals("camera_off") || cmd.equals("camera_on") ||
+            cmd.equals("screencap_off") || cmd.equals("screencap_on")) {
             if (args.length > 0) return "Failed: unexpected argument: " + arg;
         }
         if (cmd.equals("hide") || cmd.equals("unhide") ||
@@ -116,111 +119,14 @@ public class CommandHandler {
             cmd.equals("block_uninstall") || cmd.equals("unblock_uninstall")) {
             if (args.length == 0) return "Failed: missing package";
         }
+        if (cmd.equals("screen_timeout")) {
+            if (args.length == 0) return "Failed: missing seconds";
+        }
 
         if (cmd.equals("ping")) return "Success";
-        if (cmd.equals("lock_now")) return doLockNow();
-        if (cmd.equals("hide")) return doHide(arg, true);
-        if (cmd.equals("unhide")) return doHide(arg, false);
-        if (cmd.equals("suspend")) return doSuspend(arg, true);
-        if (cmd.equals("resume")) return doSuspend(arg, false);
-        if (cmd.equals("block_uninstall")) return doBlockUninstall(arg, true);
-        if (cmd.equals("unblock_uninstall")) return doBlockUninstall(arg, false);
 
-        return "Unknown";
-    }
-
-    private String handleMeta(String rest) {
-        if (rest.equals("#$%version")) {
-            return VersionInfo.getServerVersion(context);
-        }
-        return "Unknown";
-    }
-
-    private String doLockNow() {
-        try {
-            DevicePolicyManager dpm = dpmHelper.get();
-            if (dpm == null) return "Failed: dpm null";
-            dpm.lockNow();
-            return "Success";
-        } catch (Throwable t) {
-            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
-        }
-    }
-
-    private String doHide(String pkg, boolean hidden) {
-        if (!isPackageInstalled(pkg)) {
-            return "Failed: package not installed";
-        }
-        try {
-            DevicePolicyManager dpm = dpmHelper.get();
-            ComponentName admin = dpmHelper.admin();
-            boolean result = dpm.setApplicationHidden(admin, pkg, hidden);
-            if (!result) {
-                return "Failed: setApplicationHidden returned false";
-            }
-
-            ScanCache cache = ScanCache.get(context);
-            if (hidden) cache.addHidden(pkg);
-            else cache.removeHidden(pkg);
-
-            return "Success";
-        } catch (Throwable t) {
-            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
-        }
-    }
-
-    private String doSuspend(String pkg, boolean suspended) {
-        if (!isPackageInstalled(pkg)) {
-            return "Failed: package not installed";
-        }
-        try {
-            DevicePolicyManager dpm = dpmHelper.get();
-            ComponentName admin = dpmHelper.admin();
-            String[] failed = dpm.setPackagesSuspended(admin, new String[]{pkg}, suspended);
-            if (failed != null && failed.length > 0) {
-                return "Failed: cannot suspend " + failed[0];
-            }
-
-            ScanCache cache = ScanCache.get(context);
-            if (suspended) cache.addSuspended(pkg);
-            else cache.removeSuspended(pkg);
-
-            return "Success";
-        } catch (Throwable t) {
-            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
-        }
-    }
-
-    private String doBlockUninstall(String pkg, boolean blocked) {
-        if (!isPackageInstalled(pkg)) {
-            return "Failed: package not installed";
-        }
-        try {
-            DevicePolicyManager dpm = dpmHelper.get();
-            ComponentName admin = dpmHelper.admin();
-            dpm.setUninstallBlocked(admin, pkg, blocked);
-
-            ScanCache cache = ScanCache.get(context);
-            if (blocked) cache.addBlocked(pkg);
-            else cache.removeBlocked(pkg);
-
-            return "Success";
-        } catch (Throwable t) {
-            return "Failed: " + t.getClass().getSimpleName() + ": " + t.getMessage();
-        }
-    }
-
-    private boolean isPackageInstalled(String pkg) {
-        try {
-            int flags = PackageManager.MATCH_UNINSTALLED_PACKAGES
-                      | PackageManager.MATCH_DISABLED_COMPONENTS;
-            context.getPackageManager().getPackageInfo(pkg, flags);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        } catch (Throwable t) {
-            return false;
-        }
+        // 路由到 OperationHandler
+        return operationHandler.handle(cmd, arg);
     }
 
     private AesGcm getAes() {
